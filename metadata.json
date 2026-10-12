@@ -1,0 +1,6 @@
+{
+  "name": "Flutter Academy Pro",
+  "description": "Complete Dart & Flutter learning platform with interactive lessons, code playground, quizzes, guided real-world projects, and multi-language support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

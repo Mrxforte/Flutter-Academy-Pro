@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:pivotX="54"
+        android:pivotY="54">
+        <!-- Flutter Chevron Top Wing - Iris Purple -->
+        <path
+            android:fillColor="#8B7CFF"
+            android:pathData="M54,26 L72,44 L58,44 L47,33 Z" />
+        <!-- Flutter Chevron Middle Body - Deep Iris -->
+        <path
+            android:fillColor="#6555E8"
+            android:pathData="M42,38 L68,64 L54,64 L35,45 Z" />
+        <!-- Flutter Chevron Bottom Wing - Mint Accent -->
+        <path
+            android:fillColor="#54D6BE"
+            android:pathData="M54,64 L40,78 L54,78 L68,64 Z" />
+        <path
+            android:fillColor="#087F70"
+            android:pathData="M40,78 L54,78 L47,85 Z" />
+        <!-- Code bracket left < -->
+        <path
+            android:fillColor="#F1F5F9"
+            android:pathData="M31,46 L33,48 L27,54 L33,60 L31,62 L23,54 Z" />
+        <!-- Code bracket right > -->
+        <path
+            android:fillColor="#F1F5F9"
+            android:pathData="M77,46 L85,54 L77,62 L75,60 L81,54 L75,48 Z" />
+        <!-- Pro Sparkle Star in Mint -->
+        <path
+            android:fillColor="#54D6BE"
+            android:pathData="M76,28 L78,33 L83,35 L78,37 L76,42 L74,37 L69,35 L74,33 Z" />
+    </group>
+</vector>
