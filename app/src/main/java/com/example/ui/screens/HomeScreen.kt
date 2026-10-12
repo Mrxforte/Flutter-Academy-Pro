@@ -67,8 +67,8 @@ fun HomeScreen(
             .fillMaxSize()
             .background(tokens.background)
             .testTag("home_screen_lazy_column"),
-        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(22.dp)
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // 1. HEADER: Small greeting, Strong heading, Profile Avatar
         item {
@@ -97,7 +97,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(tokens.surfaceSecondary)
+                        .background(tokens.surface)
                         .border(1.dp, tokens.border, CircleShape)
                         .clickable { onNavigateToProfile?.invoke() },
                     contentAlignment = Alignment.Center
@@ -106,29 +106,23 @@ fun HomeScreen(
                         text = userProfile.name.take(1).uppercase(),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (tokens.isDark) tokens.sagePrimary else tokens.textPrimary
+                        color = tokens.primary
                     )
                 }
             }
         }
 
         // 2. FEATURED LEARNING CARD
-        // Sage-green surface in light mode (#CDEBB9), Muted green in dark mode (#1C201C / #252A24).
-        // Black CTA in light mode and sage CTA in dark mode. Clear "Continue Learning" label.
         item {
-            val featuredBg = tokens.surface
-            val featuredTextColor = tokens.textPrimary
-            val featuredSubtextColor = tokens.textSecondary
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
-                    .border(1.dp, if (tokens.isDark) tokens.border else tokens.border, RoundedCornerShape(18.dp))
+                    .border(1.dp, tokens.border, RoundedCornerShape(18.dp))
                     .clickable { onNavigateToLesson(continueLesson.id) }
                     .testTag("continue_learning_card"),
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = featuredBg),
+                colors = CardDefaults.cardColors(containerColor = tokens.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
@@ -139,14 +133,14 @@ fun HomeScreen(
                     ) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = tokens.surfaceSecondary
+                            color = tokens.subtleAccentBg
                         ) {
                             Text(
                                 text = "CURRENT PATH: ${continueLesson.courseTrack.name}",
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (tokens.isDark) tokens.sagePrimary else tokens.textPrimary,
+                                color = tokens.primary,
                                 letterSpacing = 0.5.sp
                             )
                         }
@@ -160,13 +154,13 @@ fun HomeScreen(
                         text = continueLesson.title,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = featuredTextColor
+                        color = tokens.textPrimary
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = continueLesson.description,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = featuredSubtextColor,
+                        color = tokens.textSecondary,
                         maxLines = 2
                     )
 
@@ -181,30 +175,30 @@ fun HomeScreen(
                             Text(
                                 text = "Overall Course Progress",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = featuredSubtextColor
+                                color = tokens.textSecondary
                             )
                             Text(
                                 text = "$overallProgressPercent% • $completedCount/$totalLessons completed",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.SemiBold,
-                                color = featuredTextColor
+                                color = tokens.textPrimary
                             )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         LinearProgressIndicator(
                             progress = { (completedCount.toFloat() / totalLessons.coerceAtLeast(1)).coerceIn(0f, 1f) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp)),
-                            color = if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary,
+                            color = tokens.primary,
                             trackColor = tokens.surfaceSecondary
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    // Action Button: Black in light mode, Sage in dark mode
+                    // Action Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -213,7 +207,7 @@ fun HomeScreen(
                         Text(
                             text = "${continueLesson.durationMinutes} min read",
                             style = MaterialTheme.typography.labelSmall,
-                            color = featuredSubtextColor
+                            color = tokens.textSecondary
                         )
 
                         Button(
@@ -297,7 +291,6 @@ fun HomeScreen(
         }
 
         // 4. DAILY CODING CHALLENGE
-        // One visually distinct section, short description, difficulty, estimated duration, clear action button
         item {
             Card(
                 modifier = Modifier
@@ -315,13 +308,13 @@ fun HomeScreen(
                         modifier = Modifier
                             .size(46.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(tokens.surfaceSecondary),
+                            .background(tokens.subtleAccentBg),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Code,
                             contentDescription = null,
-                            tint = tokens.textPrimary,
+                            tint = tokens.primary,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -397,13 +390,13 @@ fun HomeScreen(
                         modifier = Modifier
                             .size(46.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (tokens.isDark) tokens.surfaceSecondary else tokens.surfaceSecondary),
+                            .background(tokens.subtleAccentBg),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Widgets,
                             contentDescription = null,
-                            tint = if (tokens.isDark) tokens.sagePrimary else tokens.textPrimary,
+                            tint = tokens.primary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -480,13 +473,13 @@ fun HomeScreen(
                                     modifier = Modifier
                                         .size(36.dp)
                                         .clip(CircleShape)
-                                        .background(if (tokens.isDark) tokens.surfaceSecondary else tokens.surfaceSecondary),
+                                        .background(tokens.subtleAccentBg),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = if (moduleId.startsWith("dart")) Icons.Default.Terminal else Icons.Default.Layers,
                                         contentDescription = null,
-                                        tint = if (tokens.isDark) tokens.sagePrimary else tokens.textPrimary,
+                                        tint = tokens.primary,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -513,7 +506,7 @@ fun HomeScreen(
 
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = if (tokens.isDark) tokens.surfaceSecondary else tokens.surfaceSecondary
+                                    color = tokens.surfaceSecondary
                                 ) {
                                     Text(
                                         text = "$completedInModule/${moduleLessons.size.coerceAtLeast(3)}",
@@ -554,7 +547,7 @@ private fun ProgressStatBox(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(if (tokens.isDark) tokens.surfaceSecondary else tokens.surfaceSecondary),
+                    .background(tokens.surfaceSecondary),
                 contentAlignment = Alignment.Center
             ) {
                 Text(badge, fontSize = 16.sp)

@@ -50,7 +50,7 @@ fun ProjectsScreen(
             .testTag("projects_screen_column")
     ) {
         // Header
-        Column(modifier = Modifier.padding(horizontal = 22.dp, vertical = 18.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp)) {
             Text(
                 text = "Guided Project Lab",
                 style = MaterialTheme.typography.headlineMedium,
@@ -75,9 +75,9 @@ fun ProjectsScreen(
                         label = { Text("All Projects", style = MaterialTheme.typography.labelSmall) },
                         shape = RoundedCornerShape(8.dp),
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary,
-                            selectedLabelColor = if (tokens.isDark) tokens.surface else tokens.buttonPrimaryText,
-                            containerColor = tokens.surfaceSecondary,
+                            selectedContainerColor = tokens.primary,
+                            selectedLabelColor = Color.White,
+                            containerColor = tokens.surface,
                             labelColor = tokens.textSecondary
                         ),
                         border = FilterChipDefaults.filterChipBorder(
@@ -95,9 +95,9 @@ fun ProjectsScreen(
                         label = { Text(diff.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall) },
                         shape = RoundedCornerShape(8.dp),
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary,
-                            selectedLabelColor = if (tokens.isDark) tokens.surface else tokens.buttonPrimaryText,
-                            containerColor = tokens.surfaceSecondary,
+                            selectedContainerColor = tokens.primary,
+                            selectedLabelColor = Color.White,
+                            containerColor = tokens.surface,
                             labelColor = tokens.textSecondary
                         ),
                         border = FilterChipDefaults.filterChipBorder(
@@ -110,231 +110,187 @@ fun ProjectsScreen(
             }
         }
 
-        // Projects List
+        // Project Cards List
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 22.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            contentPadding = PaddingValues(bottom = 28.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             items(projects) { project ->
-                val isDone = completedProjectIds.contains(project.id)
                 val isExpanded = expandedProjectId == project.id
+                val isCompleted = completedProjectIds.contains(project.id)
 
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        .border(1.dp, tokens.border, RoundedCornerShape(16.dp))
+                        .testTag("project_card_${project.id}"),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = tokens.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column {
-                        // Project Card Header
-                        Row(
+                        // Card Header
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
                                     expandedProjectId = if (isExpanded) null else project.id
                                 }
-                                .padding(18.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .padding(18.dp)
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     DifficultyBadge(difficulty = project.level)
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "${project.durationMinutes} min",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = tokens.textMuted
-                                    )
-                                    if (isDone) {
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Icon(
-                                            Icons.Default.CheckCircle,
-                                            contentDescription = "Done",
-                                            tint = tokens.success,
-                                            modifier = Modifier.size(16.dp)
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = tokens.surfaceSecondary
+                                    ) {
+                                        Text(
+                                            text = "${project.durationMinutes}m build",
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = tokens.textSecondary
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = project.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = tokens.textPrimary
-                                )
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Text(
-                                    text = project.summary,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = tokens.textSecondary
-                                )
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = { onToggleProjectComplete(project.id) },
+                                        modifier = Modifier.size(32.dp).testTag("toggle_complete_${project.id}")
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                                            contentDescription = "Mark Complete",
+                                            tint = if (isCompleted) tokens.success else tokens.textMuted,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+
+                                    Icon(
+                                        imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                        contentDescription = "Toggle Details",
+                                        tint = tokens.textSecondary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
 
-                            Icon(
-                                imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                contentDescription = "Toggle project",
-                                tint = tokens.textMuted,
-                                modifier = Modifier.size(20.dp)
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = project.title,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = tokens.textPrimary
                             )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = project.summary,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = tokens.textSecondary
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Architecture badge
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = tokens.subtleAccentBg
+                                ) {
+                                    Text(
+                                        text = project.architectureType,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = tokens.primary
+                                    )
+                                }
+                            }
                         }
 
-                        // Expanded Content
+                        // Expanded Stage-by-Stage Content
                         AnimatedVisibility(visible = isExpanded) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(tokens.surfaceSecondary)
-                                    .padding(18.dp),
-                                verticalArrangement = Arrangement.spacedBy(14.dp)
+                                    .padding(horizontal = 18.dp)
+                                    .padding(bottom = 18.dp)
                             ) {
-                                // Features Checklist
-                                Column {
-                                    Text(
-                                        text = "Features & Capabilities",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = tokens.textPrimary
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    project.features.forEach { feature ->
-                                        Row(
-                                            modifier = Modifier.padding(vertical = 2.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                HorizontalDivider(color = tokens.border, thickness = 1.dp)
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                Text(
+                                    text = "Architectural Stages (${project.steps.size} Steps)",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = tokens.textPrimary
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    project.steps.forEachIndexed { sIdx, step ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .border(1.dp, tokens.border, RoundedCornerShape(12.dp)),
+                                            shape = RoundedCornerShape(12.dp),
+                                            colors = CardDefaults.cardColors(containerColor = tokens.surfaceSecondary),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                                         ) {
-                                            Icon(Icons.Default.Check, contentDescription = null, tint = tokens.success, modifier = Modifier.size(14.dp))
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(text = feature, style = MaterialTheme.typography.bodySmall, color = tokens.textSecondary)
+                                            Column(modifier = Modifier.padding(14.dp)) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(24.dp)
+                                                            .background(tokens.primary, RoundedCornerShape(6.dp)),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Text(
+                                                            text = "${step.stepNumber}",
+                                                            color = Color.White,
+                                                            fontSize = 12.sp,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                    Spacer(modifier = Modifier.width(10.dp))
+                                                    Text(
+                                                        text = step.title,
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = tokens.textPrimary
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    text = step.description,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = tokens.textSecondary
+                                                )
+
+                                                if (step.codeSnippet.isNotBlank()) {
+                                                    Spacer(modifier = Modifier.height(10.dp))
+                                                    CodeBlockView(
+                                                        code = step.codeSnippet,
+                                                        title = step.fileName
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
-                                }
-
-                                // Architecture Explanation
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .border(1.dp, tokens.border, RoundedCornerShape(12.dp)),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = tokens.surface),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(14.dp)) {
-                                        Text(
-                                            text = "Architecture: ${project.architectureType}",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = tokens.primary
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = project.architectureExplanation,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = tokens.textSecondary
-                                        )
-                                    }
-                                }
-
-                                // Folder Structure
-                                Column {
-                                    Text(
-                                        text = "Project Tree Structure",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = tokens.textPrimary
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .background(tokens.codeBackground, RoundedCornerShape(10.dp))
-                                            .border(1.dp, tokens.border, RoundedCornerShape(10.dp))
-                                            .padding(12.dp)
-                                    ) {
-                                        Text(
-                                            text = project.folderTree,
-                                            fontFamily = FontFamily.Monospace,
-                                            fontSize = 11.sp,
-                                            lineHeight = 16.sp,
-                                            color = tokens.codeText
-                                        )
-                                    }
-                                }
-
-                                // Steps & Code Walkthrough
-                                project.steps.forEach { step ->
-                                    Column {
-                                        Text(
-                                            text = "Step ${step.stepNumber}: ${step.title}",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = tokens.textPrimary
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = step.description,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = tokens.textSecondary
-                                        )
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        CodeBlockView(
-                                            code = step.codeSnippet,
-                                            title = step.fileName
-                                        )
-                                    }
-                                }
-
-                                // Common Bugs
-                                if (project.commonBugs.isNotEmpty()) {
-                                    Column {
-                                        Text(
-                                            text = "Watch Out (Common Mistakes)",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = tokens.warning
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        project.commonBugs.forEach { bug ->
-                                            Text(
-                                                text = "• $bug",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = tokens.textSecondary,
-                                                modifier = Modifier.padding(vertical = 1.dp)
-                                            )
-                                        }
-                                    }
-                                }
-
-                                // Mark Complete Action Button: Black in light mode, Sage in dark mode
-                                Button(
-                                    onClick = { onToggleProjectComplete(project.id) },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (isDone) tokens.success else tokens.buttonPrimary,
-                                        contentColor = if (isDone) Color.White else tokens.buttonPrimaryText
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp)
-                                        .testTag("toggle_project_complete_${project.id}")
-                                ) {
-                                    Icon(
-                                        imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = if (isDone) Color.White else tokens.buttonPrimaryText,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = if (isDone) "Project Completed (+150 XP)" else "Mark Project Finished (+150 XP)",
-                                        color = if (isDone) Color.White else tokens.buttonPrimaryText,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
                                 }
                             }
                         }

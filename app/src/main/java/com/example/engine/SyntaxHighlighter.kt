@@ -33,13 +33,13 @@ object DartSyntaxHighlighter {
         "ChangeNotifier", "Bloc", "Cubit", "Consumer", "CustomPainter", "Canvas", "Paint"
     )
 
-    fun highlight(code: String, isDark: Boolean = true): AnnotatedString {
-        val keywordColor = if (isDark) CodeKeywordDark else CodeKeywordLight
-        val typeColor = if (isDark) CodeTypeDark else CodeTypeLight
-        val stringColor = if (isDark) CodeStringDark else CodeStringLight
-        val commentColor = if (isDark) CodeCommentDark else CodeCommentLight
-        val numberColor = if (isDark) CodeNumberDark else CodeNumberLight
-        val functionColor = if (isDark) CodeFunctionDark else CodeFunctionLight
+    fun highlight(code: String, isDark: Boolean = false): AnnotatedString {
+        val keywordColor = if (isDark) CodeKeywordDark else LightCodeKeyword
+        val typeColor = if (isDark) CodeTypeDark else LightCodeType
+        val stringColor = if (isDark) CodeStringDark else LightCodeString
+        val commentColor = if (isDark) CodeCommentDark else LightCodeComment
+        val numberColor = if (isDark) CodeNumberDark else LightCodeNumber
+        val functionColor = if (isDark) CodeFunctionDark else LightCodeFunction
 
         return buildAnnotatedString {
             append(code)
@@ -98,12 +98,12 @@ object DartSyntaxHighlighter {
                     val word = code.substring(start, i)
                     when {
                         word.startsWith("@") -> {
-                            addStyle(SpanStyle(color = typeColor, fontWeight = FontWeight.Bold), start, i)
+                            addStyle(SpanStyle(color = functionColor, fontWeight = FontWeight.SemiBold), start, i)
                         }
-                        KEYWORDS.contains(word) -> {
+                        word in KEYWORDS -> {
                             addStyle(SpanStyle(color = keywordColor, fontWeight = FontWeight.Bold), start, i)
                         }
-                        TYPES.contains(word) || (word.isNotEmpty() && word[0].isUpperCase()) -> {
+                        word in TYPES -> {
                             addStyle(SpanStyle(color = typeColor, fontWeight = FontWeight.SemiBold), start, i)
                         }
                         i < len && code[i] == '(' -> {

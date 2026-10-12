@@ -64,7 +64,7 @@ fun LessonDetailScreen(
                         text = lesson.title,
                         maxLines = 1,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         color = tokens.textPrimary
                     )
                 },
@@ -82,7 +82,12 @@ fun LessonDetailScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = tokens.surface)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = tokens.surface,
+                    titleContentColor = tokens.textPrimary,
+                    navigationIconContentColor = tokens.textPrimary,
+                    actionIconContentColor = tokens.textSecondary
+                )
             )
         },
         bottomBar = {
@@ -100,32 +105,30 @@ fun LessonDetailScreen(
                     OutlinedButton(
                         onClick = onToggleComplete,
                         shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (isCompleted) tokens.success else tokens.border
+                        ),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = if (isCompleted) tokens.success else tokens.textSecondary
+                            containerColor = if (isCompleted) tokens.success.copy(alpha = 0.08f) else tokens.surface,
+                            contentColor = if (isCompleted) tokens.success else tokens.textPrimary
                         ),
-                        border = ButtonDefaults.outlinedButtonBorder.copy(
-                            brush = androidx.compose.ui.graphics.SolidColor(
-                                if (isCompleted) tokens.success.copy(alpha = 0.5f) else tokens.border
-                            )
-                        ),
-                        modifier = Modifier.testTag("mark_complete_button")
+                        modifier = Modifier.testTag("toggle_lesson_completed_button")
                     ) {
                         Icon(
-                            imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.Check,
+                            imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
                             contentDescription = null,
-                            tint = if (isCompleted) tokens.success else tokens.textSecondary,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(16.dp),
+                            tint = if (isCompleted) tokens.success else tokens.textSecondary
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (isCompleted) "Completed" else "Mark Complete",
-                            style = MaterialTheme.typography.labelMedium
-                        )
+                        Text(if (isCompleted) "Completed" else "Mark Complete", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
 
-                    val nextLesson = CurriculumData.allLessons.getOrNull(
-                        CurriculumData.allLessons.indexOfFirst { it.id == lesson.id } + 1
-                    )
+                    // Next Lesson Button
+                    val allLessons = CurriculumData.allLessons
+                    val currentIndex = allLessons.indexOfFirst { it.id == lessonId }
+                    val nextLesson = if (currentIndex != -1 && currentIndex < allLessons.size - 1) allLessons[currentIndex + 1] else null
 
                     if (nextLesson != null) {
                         Button(
@@ -137,9 +140,9 @@ fun LessonDetailScreen(
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.testTag("next_lesson_button")
                         ) {
-                            Text("Next Lesson", color = tokens.buttonPrimaryText, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = tokens.buttonPrimaryText, modifier = Modifier.size(14.dp))
+                            Text("Next Lesson", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(14.dp))
                         }
                     }
                 }
@@ -150,383 +153,390 @@ fun LessonDetailScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .testTag("lesson_detail_lazy_column"),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp)
         ) {
-            // Header: Module + Difficulty + Duration
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = lesson.moduleTitle.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = tokens.primary,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 0.5.sp
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        DifficultyBadge(difficulty = lesson.difficulty)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${lesson.durationMinutes} min",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = tokens.textMuted
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = lesson.title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = tokens.textPrimary
-                )
-            }
-
-            // Learning Objectives
+            // Header Info Card
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, tokens.border, RoundedCornerShape(14.dp)),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = tokens.surfaceSecondary),
+                        .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = tokens.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = tokens.secondary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Learning Objectives",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = tokens.textPrimary
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        lesson.objectives.forEach { obj ->
-                            Row(
-                                modifier = Modifier.padding(vertical = 3.dp),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Text("• ", color = tokens.secondary, fontWeight = FontWeight.Bold)
-                                Text(
-                                    text = obj,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = tokens.textSecondary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Analogy Box
-            if (lesson.analogy.isNotEmpty()) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, tokens.warning.copy(alpha = 0.25f), RoundedCornerShape(14.dp)),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
-                            Text(text = "💡", style = MaterialTheme.typography.titleMedium)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Conceptual Analogy",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = tokens.warning
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = lesson.analogy,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = tokens.textSecondary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Deep Explanation Content
-            item {
-                Text(
-                    text = lesson.detailedContent,
-                    style = MaterialTheme.typography.bodyLarge,
-                    lineHeight = 24.sp,
-                    color = tokens.textPrimary
-                )
-            }
-
-            // Architecture Diagram
-            if (lesson.diagramDescription.isNotEmpty()) {
-                item {
-                    ArchitectureDiagramView(
-                        title = lesson.diagramTitle.ifEmpty { "Architecture Schema" },
-                        asciiDiagram = lesson.diagramDescription
-                    )
-                }
-            }
-
-            // Code Example with Interactive Runner
-            item {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Interactive Code Example",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = tokens.textPrimary
-                        )
-                        TextButton(
-                            onClick = { onNavigateToPlaygroundWithCode(lesson.codeExample) }
+                    Column(modifier = Modifier.padding(18.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(14.dp), tint = tokens.primary)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Open in Sandbox", style = MaterialTheme.typography.labelSmall, color = tokens.primary)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    CodeBlockView(
-                        code = lesson.codeExample,
-                        title = "Dart & Flutter Example",
-                        onRunCode = {
-                            executionResult = DartSimulatorEngine.execute(lesson.codeExample)
-                        }
-                    )
-
-                    // Execution Console Output Panel
-                    if (executionResult != null) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(1.dp, tokens.border, RoundedCornerShape(10.dp)),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(containerColor = tokens.codeBackground),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = ">_ Console Output (${executionResult?.executionTimeMs}ms)",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = tokens.secondary
-                                    )
-                                    Text(
-                                        text = "Dart VM Active",
-                                        fontSize = 10.sp,
-                                        color = tokens.textMuted
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = executionResult?.output ?: "",
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 12.sp,
-                                    color = tokens.textPrimary
-                                )
-
-                                if (executionResult?.widgetTreePreview != null) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = executionResult?.widgetTreePreview ?: "",
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 11.sp,
-                                        color = tokens.primary
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Step-by-Step Code Walkthrough
-            if (lesson.walkthroughSteps.isNotEmpty()) {
-                item {
-                    Text(
-                        text = "Step-by-Step Walkthrough",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = tokens.textPrimary
-                    )
-                }
-                items(lesson.walkthroughSteps) { step ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, tokens.border, RoundedCornerShape(12.dp)),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Row(modifier = Modifier.padding(14.dp)) {
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .background(tokens.primary.copy(alpha = 0.15f), RoundedCornerShape(6.dp)),
-                                contentAlignment = Alignment.Center
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = tokens.subtleAccentBg
                             ) {
                                 Text(
-                                    text = "${step.stepNumber}",
+                                    text = lesson.courseTrack.name,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
                                     color = tokens.primary
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = step.title,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = tokens.textPrimary
-                                )
-                                if (step.codeLine.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = step.codeLine,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 11.sp,
-                                        color = tokens.secondary
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = step.explanation,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = tokens.textSecondary
-                                )
-                            }
+                            DifficultyBadge(difficulty = lesson.difficulty)
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = lesson.title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = tokens.textPrimary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = lesson.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = tokens.textSecondary
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Schedule, contentDescription = null, tint = tokens.textMuted, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "${lesson.durationMinutes} min read", style = MaterialTheme.typography.labelSmall, color = tokens.textMuted)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Icon(Icons.Default.LocalFireDepartment, contentDescription = null, tint = tokens.warning, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "+50 XP reward", style = MaterialTheme.typography.labelSmall, color = tokens.warning)
                         }
                     }
                 }
             }
 
-            // Common Mistakes & Fixes
-            if (lesson.mistakes.isNotEmpty()) {
-                item {
-                    Text(
-                        text = "Common Mistakes & Fixes",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = tokens.textPrimary
-                    )
-                }
-                items(lesson.mistakes) { mistake ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, tokens.border, RoundedCornerShape(14.dp)),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = mistake.title,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = tokens.textPrimary
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            // Wrong
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(tokens.error.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                                    .border(1.dp, tokens.error.copy(alpha = 0.25f), RoundedCornerShape(8.dp))
-                                    .padding(10.dp)
-                            ) {
-                                Text(
-                                    text = "✕ Avoid",
-                                    color = tokens.error,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = mistake.wrongCode,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 11.sp,
-                                    color = tokens.error
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            // Right
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(tokens.success.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                                    .border(1.dp, tokens.success.copy(alpha = 0.25f), RoundedCornerShape(8.dp))
-                                    .padding(10.dp)
-                            ) {
-                                Text(
-                                    text = "✓ Best Practice",
-                                    color = tokens.success,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = mistake.rightCode,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 11.sp,
-                                    color = tokens.success
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = mistake.explanation,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = tokens.textSecondary
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Practical Challenge Box
-            if (lesson.challengePrompt.isNotEmpty()) {
+            // Real-world Analogy Card
+            if (lesson.analogy.isNotBlank()) {
                 item {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .border(1.dp, tokens.primary.copy(alpha = 0.3f), RoundedCornerShape(14.dp)),
-                        shape = RoundedCornerShape(14.dp),
+                            .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = tokens.surfaceSecondary),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("🎯", fontSize = 16.sp)
+                                Text(text = "💡", fontSize = 18.sp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "Practice Challenge",
+                                    text = "Mental Model & Analogy",
                                     style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = tokens.primary
+                                    fontWeight = FontWeight.Bold,
+                                    color = tokens.textPrimary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = lesson.analogy,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = tokens.textSecondary,
+                                lineHeight = 21.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Diagram (if present)
+            if (lesson.diagramTitle.isNotBlank()) {
+                item {
+                    ArchitectureDiagramView(
+                        title = lesson.diagramTitle,
+                        asciiDiagram = lesson.diagramDescription
+                    )
+                }
+            }
+
+            // Detailed Content & Code Example
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column(modifier = Modifier.padding(18.dp)) {
+                        Text(
+                            text = "Concept Deep Dive",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = tokens.textPrimary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = lesson.detailedContent,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = tokens.textPrimary,
+                            lineHeight = 22.sp
+                        )
+
+                        if (lesson.codeExample.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(14.dp))
+                            CodeBlockView(
+                                code = lesson.codeExample,
+                                title = "Code Example",
+                                onRunCode = {
+                                    val result = DartSimulatorEngine.execute(lesson.codeExample)
+                                    executionResult = result
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(
+                                onClick = { onNavigateToPlaygroundWithCode(lesson.codeExample) },
+                                colors = ButtonDefaults.textButtonColors(contentColor = tokens.primary)
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Open in Live Playground Canvas", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Walkthrough Steps
+            if (lesson.walkthroughSteps.isNotEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            Text(
+                                text = "Step-by-Step Breakdown",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = tokens.textPrimary
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                lesson.walkthroughSteps.forEach { step ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(1.dp, tokens.border, RoundedCornerShape(10.dp)),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = CardDefaults.cardColors(containerColor = tokens.surfaceSecondary),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(22.dp)
+                                                        .background(tokens.primary, RoundedCornerShape(6.dp)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = "${step.stepNumber}",
+                                                        color = Color.White,
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = step.title,
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = tokens.textPrimary
+                                                )
+                                            }
+                                            if (step.codeLine.isNotBlank()) {
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    text = step.codeLine,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    fontSize = 11.sp,
+                                                    color = tokens.primary
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = step.explanation,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = tokens.textSecondary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Common Mistakes
+            if (lesson.mistakes.isNotEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            Text(
+                                text = "Common Pitfalls & Fixes",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = tokens.textPrimary
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                lesson.mistakes.forEach { mistake ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(1.dp, tokens.border, RoundedCornerShape(10.dp)),
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = CardDefaults.cardColors(containerColor = tokens.surfaceSecondary),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Text(
+                                                text = mistake.title,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold,
+                                                color = tokens.textPrimary
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Row(verticalAlignment = Alignment.Top) {
+                                                Text("❌", fontSize = 12.sp)
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = mistake.wrongCode,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    fontSize = 11.sp,
+                                                    color = tokens.error
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Row(verticalAlignment = Alignment.Top) {
+                                                Text("✅", fontSize = 12.sp)
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text(
+                                                    text = mistake.rightCode,
+                                                    fontFamily = FontFamily.Monospace,
+                                                    fontSize = 11.sp,
+                                                    color = tokens.success
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = mistake.explanation,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = tokens.textSecondary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Live Simulator Output Banner (if triggered)
+            if (executionResult != null) {
+                item {
+                    val res = executionResult!!
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Execution Output",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = tokens.textPrimary
+                                )
+                                IconButton(onClick = { executionResult = null }, modifier = Modifier.size(24.dp)) {
+                                    Icon(Icons.Default.Close, contentDescription = "Close", tint = tokens.textSecondary, modifier = Modifier.size(16.dp))
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(tokens.codeBackground, RoundedCornerShape(10.dp))
+                                    .border(1.dp, tokens.border, RoundedCornerShape(10.dp))
+                                    .padding(14.dp)
+                            ) {
+                                Text(
+                                    text = if (res.output.isEmpty()) "(Execution completed with no printed output)" else res.output,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 12.sp,
+                                    lineHeight = 18.sp,
+                                    color = if (res.isSuccess) tokens.textPrimary else tokens.error
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Hands-on Challenge
+            if (lesson.challengePrompt.isNotBlank()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(tokens.warning.copy(alpha = 0.12f), RoundedCornerShape(6.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Bolt, contentDescription = null, tint = tokens.warning, modifier = Modifier.size(18.dp))
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "Hands-on Challenge",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = tokens.textPrimary
                                 )
                             }
                             Spacer(modifier = Modifier.height(8.dp))
@@ -535,18 +545,19 @@ fun LessonDetailScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = tokens.textPrimary
                             )
+
                             Spacer(modifier = Modifier.height(14.dp))
-                            Row {
-                                OutlinedButton(
-                                    onClick = { showChallengeSolution = !showChallengeSolution },
-                                    shape = RoundedCornerShape(8.dp)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                TextButton(
+                                    onClick = { showChallengeSolution = !showChallengeSolution }
                                 ) {
-                                    Text(
-                                        text = if (showChallengeSolution) "Hide Solution" else "Show Solution",
-                                        style = MaterialTheme.typography.labelSmall
-                                    )
+                                    Text(if (showChallengeSolution) "Hide Solution" else "Reveal Solution", color = tokens.primary)
                                 }
-                                Spacer(modifier = Modifier.width(8.dp))
+
                                 Button(
                                     onClick = { onNavigateToPlaygroundWithCode(lesson.challengeSolution) },
                                     colors = ButtonDefaults.buttonColors(
@@ -555,23 +566,52 @@ fun LessonDetailScreen(
                                     ),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Text("Open in Sandbox", color = tokens.buttonPrimaryText, style = MaterialTheme.typography.labelSmall)
+                                    Text("Try in Canvas", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
-                            if (showChallengeSolution) {
+
+                            if (showChallengeSolution && lesson.challengeSolution.isNotBlank()) {
                                 Spacer(modifier = Modifier.height(10.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(tokens.codeBackground, RoundedCornerShape(8.dp))
-                                        .border(1.dp, tokens.border, RoundedCornerShape(8.dp))
-                                        .padding(10.dp)
+                                CodeBlockView(
+                                    code = lesson.challengeSolution,
+                                    title = "Challenge Solution"
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Learning Objectives Card
+            if (lesson.objectives.isNotEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = tokens.surfaceSecondary),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(18.dp)) {
+                            Text(
+                                text = "Learning Objectives",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = tokens.textPrimary
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            lesson.objectives.forEach { obj ->
+                                Row(
+                                    modifier = Modifier.padding(vertical = 3.dp),
+                                    verticalAlignment = Alignment.Top
                                 ) {
+                                    Text("✓", color = tokens.success, fontWeight = FontWeight.Bold)
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = lesson.challengeSolution,
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 11.sp,
-                                        color = tokens.secondary
+                                        text = obj,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = tokens.textSecondary
                                     )
                                 }
                             }

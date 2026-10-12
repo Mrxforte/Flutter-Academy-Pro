@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -39,9 +40,9 @@ fun QuizScreen(
 
     val questions = remember(quizType) {
         when (quizType) {
-            "dart" -> QuizBank.getQuestionsForTrack(CourseTrack.DART)
-            "flutter" -> QuizBank.getQuestionsForTrack(CourseTrack.FLUTTER)
-            else -> QuizBank.getRandomMockExam(10)
+            "dart" -> QuizBank.questions.filter { it.track == CourseTrack.DART }
+            "flutter" -> QuizBank.questions.filter { it.track == CourseTrack.FLUTTER }
+            else -> QuizBank.questions.shuffled().take(10)
         }
     }
 
@@ -68,7 +69,7 @@ fun QuizScreen(
                     Text(
                         text = if (!isQuizFinished) "Question ${currentIndex + 1} of ${questions.size}" else "Assessment Summary",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         color = tokens.textPrimary
                     )
                 },
@@ -77,12 +78,16 @@ fun QuizScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = tokens.textPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = tokens.surface)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = tokens.surface,
+                    titleContentColor = tokens.textPrimary,
+                    navigationIconContentColor = tokens.textPrimary
+                )
             )
         }
     ) { innerPadding ->
         if (isQuizFinished) {
-            // Final Summary Screen: Minimal, warm & elegant
+            // Final Summary Screen
             Column(
                 modifier = modifier
                     .fillMaxSize()
@@ -99,232 +104,280 @@ fun QuizScreen(
                         .size(68.dp)
                         .background(
                             if (isPassed) tokens.success.copy(alpha = 0.15f) else tokens.warning.copy(alpha = 0.15f),
-                            RoundedCornerShape(18.dp)
+                            shape = RoundedCornerShape(20.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (isPassed) "✓" else "!",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = if (isPassed) tokens.success else tokens.warning,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = if (isPassed) "🏆" else "📚", fontSize = 32.sp)
                 }
-                Spacer(modifier = Modifier.height(20.dp))
+
+                Spacer(modifier = Modifier.height(18.dp))
+
                 Text(
-                    text = if (isPassed) "Assessment Passed" else "Review Needed",
-                    style = MaterialTheme.typography.headlineSmall,
+                    text = if (isPassed) "Exam Completed!" else "Keep Practicing!",
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = tokens.textPrimary
                 )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "You scored $correctCount of ${questions.size} correctly ($scorePercent%)",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = tokens.textSecondary
-                )
-                Spacer(modifier = Modifier.height(18.dp))
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (tokens.isDark) tokens.surfaceSecondary else tokens.sageSoft,
-                    modifier = Modifier.border(1.dp, tokens.border, RoundedCornerShape(10.dp))
-                ) {
-                    Text(
-                        text = "+${correctCount * 25} XP Earned",
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
-                        color = if (tokens.isDark) tokens.sagePrimary else Color(0xFF000000),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(modifier = Modifier.height(32.dp))
 
-                Button(
-                    onClick = { onFinish(correctCount * 25) },
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = "You answered $correctCount of ${questions.size} questions correctly ($scorePercent%).",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = tokens.textSecondary,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Stats Breakdown Card
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
-                        .testTag("finish_quiz_button"),
+                        .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "$correctCount", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = tokens.success)
+                            Text(text = "Correct", style = MaterialTheme.typography.labelSmall, color = tokens.textSecondary)
+                        }
+                        Box(modifier = Modifier.width(1.dp).height(40.dp).background(tokens.border))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "${questions.size - correctCount}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = tokens.error)
+                            Text(text = "Incorrect", style = MaterialTheme.typography.labelSmall, color = tokens.textSecondary)
+                        }
+                        Box(modifier = Modifier.width(1.dp).height(40.dp).background(tokens.border))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "+${correctCount * 15}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = tokens.primary)
+                            Text(text = "XP Earned", style = MaterialTheme.typography.labelSmall, color = tokens.textSecondary)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(28.dp))
+
+                Button(
+                    onClick = { onFinish(correctCount * 15) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .testTag("quiz_finish_button"),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = tokens.buttonPrimary,
                         contentColor = tokens.buttonPrimaryText
-                    ),
-                    shape = RoundedCornerShape(14.dp)
+                    )
                 ) {
-                    Text("Return to Practice", color = tokens.buttonPrimaryText, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                    Text("Collect Rewards & Finish", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         } else {
-            // Active Question
-            LazyColumn(
+            // Active Question Screen
+            Column(
                 modifier = modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 22.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Thin progress indicator
-                item {
-                    LinearProgressIndicator(
-                        progress = { (currentIndex + 1).toFloat() / questions.size },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp)),
-                        color = if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary,
-                        trackColor = if (tokens.isDark) tokens.surfaceSecondary else tokens.warmBeige.copy(alpha = 0.5f)
-                    )
-                }
-
-                // Question Header & Difficulty
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (tokens.isDark) tokens.surfaceSecondary else tokens.sageSoft
-                        ) {
-                            Text(
-                                text = currentQuestion.topic.uppercase(),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (tokens.isDark) tokens.sagePrimary else Color(0xFF000000),
-                                fontWeight = FontWeight.Bold,
-                                letterSpacing = 0.5.sp
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    // Question Progress
+                    item {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Track: ${currentQuestion.track.name}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = tokens.textSecondary
+                                )
+                                Text(
+                                    text = "${currentIndex + 1} / ${questions.size}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = tokens.textPrimary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            LinearProgressIndicator(
+                                progress = { ((currentIndex + 1).toFloat() / questions.size) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp)),
+                                color = tokens.primary,
+                                trackColor = tokens.surfaceSecondary
                             )
                         }
-                        DifficultyBadge(difficulty = currentQuestion.difficulty)
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = currentQuestion.question,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = tokens.textPrimary
-                    )
-                }
-
-                // Code snippet (if any)
-                if (currentQuestion.codeSnippet != null) {
+                    // Question Card
                     item {
-                        Box(
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(tokens.codeBackground, RoundedCornerShape(12.dp))
-                                .border(1.dp, tokens.border, RoundedCornerShape(12.dp))
-                                .padding(14.dp)
+                                .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
-                            Text(
-                                text = currentQuestion.codeSnippet,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 12.sp,
-                                color = tokens.codeText
-                            )
+                            Column(modifier = Modifier.padding(18.dp)) {
+                                DifficultyBadge(difficulty = currentQuestion.difficulty)
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = currentQuestion.question,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = tokens.textPrimary,
+                                    lineHeight = 24.sp
+                                )
+
+                                val snippet = currentQuestion.codeSnippet
+                                if (!snippet.isNullOrBlank()) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(tokens.codeBackground, RoundedCornerShape(10.dp))
+                                            .border(1.dp, tokens.border, RoundedCornerShape(10.dp))
+                                            .padding(12.dp)
+                                    ) {
+                                        Text(
+                                            text = snippet,
+                                            fontFamily = FontFamily.Monospace,
+                                            fontSize = 12.sp,
+                                            lineHeight = 18.sp,
+                                            color = tokens.textPrimary
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
-                }
 
-                // Answer Options (Clean white or elevated dark surfaces)
-                items(currentQuestion.options.size) { optIndex ->
-                    val optionText = currentQuestion.options[optIndex]
-                    val isSelected = selectedOptionIndex == optIndex
-                    val isCorrectOption = optIndex == currentQuestion.correctIndex
+                    // Options List
+                    itemsIndexed(currentQuestion.options) { oIndex, optionText ->
+                        val isSelected = selectedOptionIndex == oIndex
+                        val isCorrect = oIndex == currentQuestion.correctIndex
 
-                    val borderColor = when {
-                        !isSubmitted && isSelected -> if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary
-                        isSubmitted && isCorrectOption -> tokens.success
-                        isSubmitted && isSelected && !isCorrectOption -> tokens.error
-                        else -> tokens.border
-                    }
+                        val borderCol = when {
+                            !isSubmitted && isSelected -> tokens.primary
+                            isSubmitted && isCorrect -> tokens.success
+                            isSubmitted && isSelected && !isCorrect -> tokens.error
+                            else -> tokens.border
+                        }
 
-                    val bgColor = when {
-                        !isSubmitted && isSelected -> if (tokens.isDark) tokens.surfaceElevated else tokens.sageSoft.copy(alpha = 0.35f)
-                        isSubmitted && isCorrectOption -> tokens.success.copy(alpha = 0.12f)
-                        isSubmitted && isSelected && !isCorrectOption -> tokens.error.copy(alpha = 0.12f)
-                        else -> tokens.surface
-                    }
+                        val containerCol = when {
+                            !isSubmitted && isSelected -> tokens.subtleAccentBg
+                            isSubmitted && isCorrect -> tokens.success.copy(alpha = 0.1f)
+                            isSubmitted && isSelected && !isCorrect -> tokens.error.copy(alpha = 0.1f)
+                            else -> tokens.surface
+                        }
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
-                            .clickable(enabled = !isSubmitted) {
-                                selectedOptionIndex = optIndex
-                            }
-                            .testTag("quiz_option_$optIndex"),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = bgColor),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, borderCol, RoundedCornerShape(12.dp))
+                                .clickable(enabled = !isSubmitted) {
+                                    selectedOptionIndex = oIndex
+                                }
+                                .testTag("quiz_option_$oIndex"),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = containerCol),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                         ) {
-                            RadioButton(
-                                selected = isSelected,
-                                onClick = { if (!isSubmitted) selectedOptionIndex = optIndex },
-                                enabled = !isSubmitted,
-                                colors = RadioButtonDefaults.colors(
-                                    selectedColor = if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary,
-                                    unselectedColor = tokens.textMuted
-                                )
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = optionText,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = tokens.textPrimary,
-                                modifier = Modifier.weight(1f)
-                            )
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(
+                                            if (isSelected || (isSubmitted && isCorrect)) borderCol else tokens.surfaceSecondary
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = ('A'.code + oIndex).toChar().toString(),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected || (isSubmitted && isCorrect)) Color.White else tokens.textSecondary
+                                    )
+                                }
 
-                            if (isSubmitted) {
-                                if (isCorrectOption) {
-                                    Icon(Icons.Default.CheckCircle, contentDescription = "Correct", tint = tokens.success, modifier = Modifier.size(20.dp))
-                                } else if (isSelected) {
-                                    Icon(Icons.Default.Close, contentDescription = "Wrong", tint = tokens.error, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Text(
+                                    text = optionText,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = tokens.textPrimary,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                if (isSubmitted) {
+                                    if (isCorrect) {
+                                        Icon(Icons.Default.CheckCircle, contentDescription = "Correct", tint = tokens.success, modifier = Modifier.size(18.dp))
+                                    } else if (isSelected) {
+                                        Icon(Icons.Default.Close, contentDescription = "Incorrect", tint = tokens.error, modifier = Modifier.size(18.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Explanation Box (after submission)
+                    if (isSubmitted && currentQuestion.explanation.isNotBlank()) {
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = tokens.surfaceSecondary,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, tokens.border)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Text(
+                                        text = "Explanation",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = tokens.textPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = currentQuestion.explanation,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = tokens.textSecondary,
+                                        lineHeight = 18.sp
+                                    )
                                 }
                             }
                         }
                     }
                 }
 
-                // Explanation Box after submission
-                if (isSubmitted) {
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(1.dp, tokens.border, RoundedCornerShape(14.dp)),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = tokens.surfaceSecondary),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Text(
-                                    text = "Explanation",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (tokens.isDark) tokens.sagePrimary else tokens.textPrimary
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = currentQuestion.explanation,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = tokens.textSecondary
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Action Button: Submit or Next (Black in light, Sage in dark)
-                item {
-                    Spacer(modifier = Modifier.height(6.dp))
+                // Bottom Action Button
+                Surface(
+                    color = tokens.surface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp)
+                ) {
                     if (!isSubmitted) {
                         Button(
                             onClick = {
@@ -338,22 +391,20 @@ fun QuizScreen(
                             enabled = selectedOptionIndex != null,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
+                                .height(46.dp)
                                 .testTag("quiz_submit_button"),
+                            shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = tokens.buttonPrimary,
-                                contentColor = tokens.buttonPrimaryText,
-                                disabledContainerColor = tokens.surfaceSecondary,
-                                disabledContentColor = tokens.textMuted
-                            ),
-                            shape = RoundedCornerShape(14.dp)
+                                contentColor = tokens.buttonPrimaryText
+                            )
                         ) {
-                            Text("Submit Answer", color = if (selectedOptionIndex != null) tokens.buttonPrimaryText else tokens.textMuted, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            Text("Submit Answer", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     } else {
                         Button(
                             onClick = {
-                                if (currentIndex + 1 < questions.size) {
+                                if (currentIndex < questions.size - 1) {
                                     currentIndex++
                                     selectedOptionIndex = null
                                     isSubmitted = false
@@ -363,19 +414,18 @@ fun QuizScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
-                                .testTag("quiz_next_button"),
+                                .height(46.dp)
+                                .testTag("quiz_continue_button"),
+                            shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = tokens.buttonPrimary,
                                 contentColor = tokens.buttonPrimaryText
-                            ),
-                            shape = RoundedCornerShape(14.dp)
+                            )
                         ) {
                             Text(
-                                if (currentIndex + 1 < questions.size) "Next Question" else "See Results",
-                                color = tokens.buttonPrimaryText,
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.SemiBold
+                                text = if (currentIndex < questions.size - 1) "Next Question →" else "View Assessment Results",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }

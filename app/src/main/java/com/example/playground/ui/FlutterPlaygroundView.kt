@@ -8,8 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,11 +27,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.engine.DartSyntaxHighlighter
 import com.example.playground.engine.*
 import com.example.ui.theme.AppTheme
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun FlutterPlaygroundView(
@@ -43,7 +38,6 @@ fun FlutterPlaygroundView(
     val tokens = AppTheme.tokens
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
-    val coroutineScope = rememberCoroutineScope()
 
     val starterTemplates = remember {
         listOf(
@@ -101,150 +95,143 @@ Card(
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Sardor Umarov', fontSize: 15, color: Colors.black),
-                Text('Senior Flutter Lead', fontSize: 12, color: Colors.grey),
+                Text('Flutter Card Component', fontSize: 16, fontWeight: FontWeight.bold),
+                Text('Subheading text description', fontSize: 13, color: Colors.grey),
               ],
             ),
           ],
         ),
-        SizedBox(height: 16),
-        Text('Real dynamic Flutter widget tree rendered on mobile canvas.', color: Colors.black),
         SizedBox(height: 12),
-        ElevatedButton(child: Text('Connect Profile'), color: Colors.purple),
+        Text('Card content dynamically created via our parser AST engine!'),
+        SizedBox(height: 12),
+        ElevatedButton(child: Text('Card Action'), color: Colors.purple),
       ],
     ),
   ),
 )
             """.trimIndent(),
-            "Stack & Badges" to """
-Stack(
-  alignment: Alignment.center,
+            "Form Fields" to """
+Column(
+  mainAxisAlignment: MainAxisAlignment.center,
   children: [
-    Container(
-      width: 240,
-      height: 150,
-      color: Colors.indigo,
-      borderRadius: BorderRadius.circular(14.0),
-      child: Center(
-        child: Text('Underlying Canvas', color: Colors.white),
-      ),
-    ),
-    Container(
-      width: 120,
-      height: 40,
-      color: Colors.amber,
-      borderRadius: BorderRadius.circular(20.0),
-      child: Center(
-        child: Text('PRO BADGE', color: Colors.black),
-      ),
-    ),
+    Text('Interactive Form Elements', fontSize: 17, fontWeight: FontWeight.bold),
+    SizedBox(height: 14),
+    TextField(labelText: 'Email Address', hintText: 'developer@example.com'),
+    SizedBox(height: 10),
+    TextField(labelText: 'Password', obscureText: true),
+    SizedBox(height: 16),
+    ElevatedButton(child: Text('Sign In'), color: Colors.blue),
+  ],
+)
+            """.trimIndent(),
+            "Scrollable List" to """
+ListView(
+  children: [
+    Text('Flutter Scrollable List', fontSize: 18, fontWeight: FontWeight.bold),
+    SizedBox(height: 8),
+    Container(width: 260, height: 44, color: Colors.teal, child: Center(child: Text('Item 1: Stateless Widget', color: Colors.white))),
+    SizedBox(height: 8),
+    Container(width: 260, height: 44, color: Colors.blue, child: Center(child: Text('Item 2: Stateful Widget', color: Colors.white))),
+    SizedBox(height: 8),
+    Container(width: 260, height: 44, color: Colors.purple, child: Center(child: Text('Item 3: InheritedWidget', color: Colors.white))),
+    SizedBox(height: 8),
+    Container(width: 260, height: 44, color: Colors.orange, child: Center(child: Text('Item 4: RenderBox Engine', color: Colors.white))),
   ],
 )
             """.trimIndent()
         )
     }
 
-    var codeText by remember(initialCode) {
-        mutableStateOf(initialCode ?: starterTemplates[0].second)
+    var codeText by remember {
+        mutableStateOf(initialCode ?: starterTemplates.first().second)
     }
 
-    var selectedWorkspaceTab by remember { mutableIntStateOf(1) } // 0: Editor, 1: Live Preview, 2: Console
-    var selectedDeviceSize by remember { mutableStateOf(PreviewDeviceSize.STANDARD) }
-    var canvasThemeMode by remember { mutableStateOf(CanvasThemeMode.DARK) }
-
-    var lastSuccessfulRoot by remember {
-        mutableStateOf(FlutterCodeParser.parse(codeText).rootNode)
+    var parseResult by remember {
+        mutableStateOf(FlutterCodeParser.parse(codeText))
     }
-    var diagnostics by remember { mutableStateOf<List<CompileDiagnostic>>(emptyList()) }
-    var compileTimeMs by remember { mutableLongStateOf(18) }
-    var interactionLogs by remember { mutableStateOf<List<String>>(emptyList()) }
-    var isCompiling by remember { mutableStateOf(false) }
 
-    // Compiler function
+    var selectedTab by remember { mutableIntStateOf(0) } // 0: Live Canvas, 1: Code Editor, 2: Widget Tree
+    var canvasThemeMode by remember { mutableStateOf(CanvasThemeMode.LIGHT) }
+    var zoomScale by remember { mutableFloatStateOf(1f) }
+
     fun compileAndRun() {
-        isCompiling = true
-        val start = System.currentTimeMillis()
-        val parseResult = FlutterCodeParser.parse(codeText)
-        val elapsed = (System.currentTimeMillis() - start).coerceAtLeast(12)
-        compileTimeMs = elapsed
-        diagnostics = parseResult.diagnostics
-
-        if (parseResult.rootNode != null) {
-            lastSuccessfulRoot = parseResult.rootNode
-            interactionLogs = interactionLogs + "✓ Rebuilt frame successfully in ${elapsed}ms (${parseResult.rootNode.type})"
-            selectedWorkspaceTab = 1 // Switch to Live Preview
-        } else {
-            interactionLogs = interactionLogs + "✕ Compilation error: ${parseResult.diagnostics.firstOrNull()?.message}"
-            selectedWorkspaceTab = 2 // Switch to Console
+        val result = FlutterCodeParser.parse(codeText)
+        parseResult = result
+        if (result.rootNode != null) {
+            Toast.makeText(context, "Rendered successfully", Toast.LENGTH_SHORT).show()
         }
-        isCompiling = false
     }
+
+    val currentRootNode = parseResult.rootNode
+    val hasErrors = parseResult.diagnostics.any { it.isError }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(tokens.background)
     ) {
-        // Workspace Top Bar: Device Size, Theme Toggle, Workspace Tabs
+        // Playground Header Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(tokens.surface)
-                .border(1.dp, tokens.border, RoundedCornerShape(0.dp))
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .border(1.dp, tokens.border)
+                .padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Workspace Mode Segmented Control
-            Row(
-                modifier = Modifier
-                    .background(tokens.surfaceSecondary, RoundedCornerShape(8.dp))
-                    .border(1.dp, tokens.border, RoundedCornerShape(8.dp))
-                    .padding(2.dp)
-            ) {
-                listOf("Editor", "Live Canvas", "Console").forEachIndexed { idx, label ->
-                    val isSelected = selectedWorkspaceTab == idx
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(if (isSelected) tokens.surface else tokens.surfaceSecondary)
-                            .clickable { selectedWorkspaceTab = idx }
-                            .padding(horizontal = 10.dp, vertical = 5.dp)
-                            .testTag("workspace_tab_$idx"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isSelected) tokens.primary else tokens.textSecondary
-                        )
-                    }
-                }
-            }
-
-            // Canvas Controls: Size & Theme
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Device Size Toggle
-                IconButton(
-                    onClick = {
-                        selectedDeviceSize = when (selectedDeviceSize) {
-                            PreviewDeviceSize.COMPACT -> PreviewDeviceSize.STANDARD
-                            PreviewDeviceSize.STANDARD -> PreviewDeviceSize.TABLET
-                            PreviewDeviceSize.TABLET -> PreviewDeviceSize.COMPACT
-                        }
-                    },
-                    modifier = Modifier.size(32.dp).testTag("device_size_toggle")
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(tokens.subtleAccentBg, RoundedCornerShape(6.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Devices,
-                        contentDescription = "Device size: ${selectedDeviceSize.displayName}",
-                        tint = tokens.textSecondary,
+                        imageVector = Icons.Default.Widgets,
+                        contentDescription = null,
+                        tint = tokens.primary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = "Flutter Widget Canvas",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = tokens.textPrimary
+                    )
+                    Text(
+                        text = "Live dynamic AST rendering",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = tokens.textSecondary
+                    )
+                }
+            }
 
-                // Canvas Light/Dark Toggle
+            // Quick Actions: Run, Reset, Canvas Light/Dark
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = {
+                        codeText = starterTemplates.first().second
+                        compileAndRun()
+                    },
+                    modifier = Modifier.size(32.dp).testTag("playground_reset_button")
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Reset code", tint = tokens.textSecondary, modifier = Modifier.size(16.dp))
+                }
+
+                IconButton(
+                    onClick = {
+                        clipboardManager.setText(AnnotatedString(codeText))
+                        Toast.makeText(context, "Code copied", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = "Copy code", tint = tokens.textSecondary, modifier = Modifier.size(16.dp))
+                }
+
                 IconButton(
                     onClick = {
                         canvasThemeMode = if (canvasThemeMode == CanvasThemeMode.DARK) CanvasThemeMode.LIGHT else CanvasThemeMode.DARK
@@ -259,22 +246,21 @@ Stack(
                     )
                 }
 
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(6.dp))
 
-                // Run Action Button: Sage-green Run button
                 Button(
                     onClick = { compileAndRun() },
-                    modifier = Modifier.height(30.dp).testTag("playground_compile_button"),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
+                    modifier = Modifier.height(32.dp).testTag("playground_compile_button"),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 2.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = tokens.sagePrimary,
-                        contentColor = Color(0xFF141614)
+                        containerColor = tokens.buttonPrimary,
+                        contentColor = tokens.buttonPrimaryText
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = "Run", modifier = Modifier.size(15.dp), tint = Color(0xFF141614))
+                    Icon(Icons.Default.PlayArrow, contentDescription = "Run", modifier = Modifier.size(15.dp), tint = tokens.buttonPrimaryText)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Run Live", fontSize = 11.sp, color = Color(0xFF141614), fontWeight = FontWeight.Bold)
+                    Text("Run Live", fontSize = 11.sp, color = tokens.buttonPrimaryText, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -285,7 +271,7 @@ Stack(
                 .fillMaxWidth()
                 .background(tokens.surfaceSecondary)
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 6.dp),
+                .padding(horizontal = 14.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -300,8 +286,8 @@ Stack(
                         codeText = templateCode
                         compileAndRun()
                     },
-                    label = { Text(title, fontSize = 11.sp) },
-                    shape = RoundedCornerShape(6.dp),
+                    label = { Text(title, fontSize = 11.sp, color = tokens.textPrimary) },
+                    shape = RoundedCornerShape(8.dp),
                     colors = SuggestionChipDefaults.suggestionChipColors(
                         containerColor = tokens.surface,
                         labelColor = tokens.textPrimary
@@ -314,262 +300,237 @@ Stack(
             }
         }
 
-        // Content Area based on Selected Tab
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            when (selectedWorkspaceTab) {
-                0 -> {
-                    // TAB 0: Professional Dart Code Editor
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(14.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Dart / Flutter Source (Editable)",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = tokens.textPrimary
-                            )
-                            Row {
-                                TextButton(
-                                    onClick = {
-                                        clipboardManager.setText(AnnotatedString(codeText))
-                                        Toast.makeText(context, "Code copied", Toast.LENGTH_SHORT).show()
-                                    }
-                                ) {
-                                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(13.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Copy", fontSize = 11.sp)
-                                }
-                                TextButton(
-                                    onClick = {
-                                        codeText = starterTemplates[0].second
-                                        compileAndRun()
-                                    }
-                                ) {
-                                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(13.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Reset", fontSize = 11.sp)
-                                }
-                            }
-                        }
+        // View Tabs: Canvas, Code Editor, Widget Tree
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 8.dp)
+                .background(tokens.surfaceSecondary, RoundedCornerShape(10.dp))
+                .border(1.dp, tokens.border, RoundedCornerShape(10.dp))
+                .padding(3.dp)
+        ) {
+            val tabs = listOf("Preview Canvas", "Code Editor", "Widget Tree")
+            tabs.forEachIndexed { index, label ->
+                val isSelected = selectedTab == index
+                val tabBg = if (isSelected) tokens.surface else tokens.surfaceSecondary
+                val tabTextColor = if (isSelected) tokens.primary else tokens.textSecondary
 
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        OutlinedTextField(
-                            value = codeText,
-                            onValueChange = { codeText = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                                .testTag("flutter_code_editor"),
-                            textStyle = LocalTextStyle.current.copy(
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 12.sp,
-                                lineHeight = 19.sp,
-                                color = tokens.textPrimary
-                            ),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = tokens.codeBackground,
-                                unfocusedContainerColor = tokens.codeBackground,
-                                focusedBorderColor = tokens.primary,
-                                unfocusedBorderColor = tokens.border
-                            ),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Lines: ${codeText.lines().size} • Supports Container, Column, Row, Stack, Card, Buttons, Text",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = tokens.textMuted
-                            )
-                            Button(
-                                onClick = { compileAndRun() },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = tokens.buttonPrimary,
-                                    contentColor = tokens.buttonPrimaryText
-                                ),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text("Rebuild Live Preview", style = MaterialTheme.typography.labelMedium, color = tokens.buttonPrimaryText)
-                            }
-                        }
-                    }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(7.dp))
+                        .background(tabBg)
+                        .clickable { selectedTab = index }
+                        .padding(vertical = 7.dp)
+                        .testTag("playground_tab_$index"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        fontSize = 12.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        color = tabTextColor
+                    )
                 }
+            }
+        }
 
-                1 -> {
-                    // TAB 1: Real Dynamic Flutter Widget Rendering Canvas
-                    // Creamy-white in light mode, Muted dark-green in dark mode
-                    val canvasBg = if (canvasThemeMode == CanvasThemeMode.DARK) Color(0xFF1C201C) else Color(0xFFFFFFFF)
+        // Error Banner
+        if (hasErrors) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(8.dp),
+                color = tokens.error.copy(alpha = 0.12f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, tokens.error.copy(alpha = 0.3f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Warning, contentDescription = "Error", tint = tokens.error, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = parseResult.diagnostics.firstOrNull { it.isError }?.message ?: "Parsing diagnostic error",
+                        color = tokens.error,
+                        fontSize = 12.sp
+                    )
+                }
+            }
+        }
 
-                    Column(
+        // Tab Content
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(1f)
+                .padding(horizontal = 14.dp)
+                .padding(bottom = 12.dp)
+        ) {
+            when (selectedTab) {
+                0 -> {
+                    Card(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(14.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        // Device frame header
-                        Row(
-                            modifier = Modifier
-                                .width(selectedDeviceSize.widthDp.dp)
-                                .background(tokens.surfaceSecondary, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                                .border(1.dp, tokens.border, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                                .padding(horizontal = 14.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(tokens.secondary))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "${selectedDeviceSize.displayName} • Live Flutter Canvas",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = tokens.textSecondary
-                                )
-                            }
-                            Text(
-                                text = "${compileTimeMs}ms",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = tokens.textMuted
-                            )
-                        }
-
-                        // The Real Rendered Canvas Body
-                        Box(
-                            modifier = Modifier
-                                .width(selectedDeviceSize.widthDp.dp)
-                                .weight(1f)
-                                .background(canvasBg, RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                                .border(1.dp, tokens.border, RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            val root = lastSuccessfulRoot
-                            if (root != null) {
-                                RenderFlutterWidget(
-                                    node = root,
-                                    onInteractiveAction = { log ->
-                                        interactionLogs = interactionLogs + log
-                                    }
-                                )
-                            } else {
-                                Text("No widget rendered. Click 'Run Live' to build.", color = tokens.textMuted)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Diagnostics Banner (if errors exist)
-                        if (diagnostics.isNotEmpty()) {
-                            Card(
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .border(1.dp, tokens.error.copy(alpha = 0.4f), RoundedCornerShape(8.dp)),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = CardDefaults.cardColors(containerColor = tokens.error.copy(alpha = 0.1f))
+                                    .background(tokens.surfaceSecondary)
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(Icons.Default.Warning, contentDescription = null, tint = tokens.error, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFE5484D).copy(alpha = 0.85f)))
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFFEAA12B).copy(alpha = 0.85f)))
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(Color(0xFF16A36A).copy(alpha = 0.85f)))
+                                    Spacer(modifier = Modifier.width(10.dp))
                                     Text(
-                                        text = "Preserving previous successful frame: ${diagnostics.first().message}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = tokens.error
+                                        text = "Flutter Simulated Device Canvas",
+                                        fontSize = 11.sp,
+                                        color = tokens.textSecondary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(onClick = { zoomScale = (zoomScale - 0.1f).coerceAtLeast(0.6f) }, modifier = Modifier.size(24.dp)) {
+                                        Icon(Icons.Default.ZoomOut, contentDescription = "Zoom out", tint = tokens.textSecondary, modifier = Modifier.size(14.dp))
+                                    }
+                                    Text(text = "${(zoomScale * 100).toInt()}%", fontSize = 10.sp, color = tokens.textSecondary)
+                                    IconButton(onClick = { zoomScale = (zoomScale + 0.1f).coerceAtMost(1.5f) }, modifier = Modifier.size(24.dp)) {
+                                        Icon(Icons.Default.ZoomIn, contentDescription = "Zoom in", tint = tokens.textSecondary, modifier = Modifier.size(14.dp))
+                                    }
+                                }
+                            }
+
+                            val canvasBg = if (canvasThemeMode == CanvasThemeMode.DARK) Color(0xFF1E293B) else Color(0xFFFFFFFF)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(canvasBg)
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (currentRootNode != null) {
+                                    RenderFlutterWidget(
+                                        node = currentRootNode,
+                                        onInteractiveAction = { event ->
+                                            Toast.makeText(context, event, Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Tap 'Run Live' to compile widget code",
+                                        color = tokens.textMuted,
+                                        fontSize = 13.sp
                                     )
                                 }
                             }
                         }
                     }
                 }
-
-                2 -> {
-                    // TAB 2: Diagnostic Compiler Console
-                    LazyColumn(
+                1 -> {
+                    Card(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
-                        item {
+                        Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Flutter Code Editor",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = tokens.textPrimary
+                                )
+                                Button(
+                                    onClick = { compileAndRun() },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = tokens.buttonPrimary,
+                                        contentColor = tokens.buttonPrimaryText
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(14.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Apply & Run", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedTextField(
+                                value = codeText,
+                                onValueChange = { codeText = it },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .testTag("playground_editor_field"),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = tokens.primary,
+                                    unfocusedBorderColor = tokens.border,
+                                    focusedTextColor = tokens.textPrimary,
+                                    unfocusedTextColor = tokens.textPrimary,
+                                    focusedContainerColor = tokens.codeBackground,
+                                    unfocusedContainerColor = tokens.codeBackground
+                                ),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 12.sp,
+                                    lineHeight = 19.sp
+                                )
+                            )
+                        }
+                    }
+                }
+                2 -> {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                             Text(
-                                text = "Compiler Diagnostic Console",
+                                text = "Flutter Widget Hierarchy Tree",
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Bold,
                                 color = tokens.textPrimary
                             )
                             Text(
-                                text = "Execution logs, frame rebuild timings, and AST validation messages.",
+                                text = "Parsed Abstract Syntax Tree (AST) structure for Flutter runtime",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = tokens.textSecondary
                             )
-                        }
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                        item {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .border(1.dp, tokens.border, RoundedCornerShape(10.dp)),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = CardDefaults.cardColors(containerColor = tokens.codeBackground)
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Text(
-                                        text = ">_ System Build Logs:",
-                                        fontFamily = FontFamily.Monospace,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = tokens.secondary
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    if (interactionLogs.isEmpty()) {
-                                        Text(
-                                            text = "Ready. Tap 'Run Live' to parse and compile Flutter widgets.",
-                                            fontFamily = FontFamily.Monospace,
-                                            fontSize = 11.sp,
-                                            color = tokens.textMuted
-                                        )
+                            HorizontalDivider(color = tokens.border)
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                item {
+                                    if (currentRootNode != null) {
+                                        WidgetTreeNodeView(node = currentRootNode, depth = 0)
                                     } else {
-                                        interactionLogs.takeLast(10).forEach { log ->
-                                            Text(
-                                                text = log,
-                                                fontFamily = FontFamily.Monospace,
-                                                fontSize = 11.sp,
-                                                color = if (log.startsWith("✕")) tokens.error else tokens.textPrimary
-                                            )
-                                        }
-                                    }
-
-                                    if (diagnostics.isNotEmpty()) {
-                                        Spacer(modifier = Modifier.height(10.dp))
-                                        Text(
-                                            text = "Compiler Diagnostics (${diagnostics.size} issues):",
-                                            fontFamily = FontFamily.Monospace,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = tokens.error
-                                        )
-                                        diagnostics.forEach { diag ->
-                                            Text(
-                                                text = "Line ${diag.line}: ${diag.message}",
-                                                fontFamily = FontFamily.Monospace,
-                                                fontSize = 11.sp,
-                                                color = tokens.error
-                                            )
-                                        }
+                                        Text(text = "No widget tree parsed yet", color = tokens.textMuted)
                                     }
                                 }
                             }
@@ -577,6 +538,49 @@ Stack(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun WidgetTreeNodeView(
+    node: FlutterWidgetNode,
+    depth: Int
+) {
+    val tokens = AppTheme.tokens
+    Column(modifier = Modifier.padding(start = (depth * 18).dp, top = 4.dp, bottom = 4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(tokens.primary)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = tokens.subtleAccentBg
+            ) {
+                Text(
+                    text = node.type,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    color = tokens.primary
+                )
+            }
+            if (node.properties.isNotEmpty()) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "(${node.properties.keys.take(3).joinToString()})",
+                    fontSize = 11.sp,
+                    color = tokens.textSecondary,
+                    maxLines = 1
+                )
+            }
+        }
+        node.children.forEach { child ->
+            WidgetTreeNodeView(node = child, depth = depth + 1)
         }
     }
 }

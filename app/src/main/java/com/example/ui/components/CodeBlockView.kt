@@ -54,8 +54,8 @@ fun CodeBlockView(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, tokens.border, RoundedCornerShape(12.dp)),
-        shape = RoundedCornerShape(12.dp),
+            .border(1.dp, tokens.border, RoundedCornerShape(14.dp)),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = tokens.codeBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -70,16 +70,16 @@ fun CodeBlockView(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(Color(0xFFEF4444).copy(alpha = 0.8f)))
+                    Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(Color(0xFFE5484D).copy(alpha = 0.85f)))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(Color(0xFFF59E0B).copy(alpha = 0.8f)))
+                    Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(Color(0xFFEAA12B).copy(alpha = 0.85f)))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(Color(0xFF10B981).copy(alpha = 0.8f)))
+                    Box(modifier = Modifier.size(9.dp).clip(CircleShape).background(Color(0xFF16A36A).copy(alpha = 0.85f)))
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = title,
                         fontSize = 12.sp,
-                        color = tokens.textMuted,
+                        color = tokens.textSecondary,
                         fontFamily = FontFamily.Monospace
                     )
                 }
@@ -102,7 +102,7 @@ fun CodeBlockView(
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                         colors = ButtonDefaults.filledTonalButtonColors(
                             containerColor = tokens.surfaceElevated,
-                            contentColor = tokens.textSecondary
+                            contentColor = tokens.textPrimary
                         ),
                         shape = RoundedCornerShape(6.dp)
                     ) {
@@ -126,7 +126,7 @@ fun CodeBlockView(
                                 .testTag("run_code_header_button"),
                             contentPadding = PaddingValues(horizontal = 9.dp, vertical = 2.dp),
                             colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = tokens.primary.copy(alpha = 0.15f),
+                                containerColor = tokens.subtleAccentBg,
                                 contentColor = tokens.primary
                             ),
                             shape = RoundedCornerShape(6.dp)
@@ -158,13 +158,13 @@ fun CodeBlockView(
                             text = i.toString(),
                             fontSize = 12.sp,
                             lineHeight = 20.sp,
-                            fontFamily = FontFamily.Monospace,
-                            color = tokens.textMuted
+                            color = tokens.textMuted,
+                            fontFamily = FontFamily.Monospace
                         )
                     }
                 }
 
-                // Vertical gutter divider
+                // Vertical separator
                 Box(
                     modifier = Modifier
                         .width(1.dp)
@@ -172,19 +172,20 @@ fun CodeBlockView(
                         .background(tokens.border)
                 )
 
-                // Code text with horizontal scrolling
+                Spacer(modifier = Modifier.width(10.dp))
+
+                // Highlighted Code
                 Box(
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
                         .horizontalScroll(scrollState)
-                        .padding(horizontal = 12.dp)
+                        .padding(end = 16.dp)
                 ) {
                     Text(
                         text = highlightedText,
                         fontSize = 12.sp,
                         lineHeight = 20.sp,
-                        fontFamily = FontFamily.Monospace,
-                        color = tokens.textPrimary
+                        fontFamily = FontFamily.Monospace
                     )
                 }
             }

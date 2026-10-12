@@ -69,17 +69,17 @@ fun MainApp(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(24.dp)
-                                    .background(tokens.primary.copy(alpha = 0.15f), RoundedCornerShape(6.dp)),
+                                    .size(28.dp)
+                                    .background(tokens.subtleAccentBg, RoundedCornerShape(8.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = "⚡", fontSize = 14.sp)
+                                Text(text = "⚡", fontSize = 15.sp)
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = "Flutter Academy",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Bold,
                                 color = tokens.textPrimary
                             )
                         }
@@ -121,18 +121,22 @@ fun MainApp(
                             Text(text = currentLanguage.flag, fontSize = 18.sp)
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = tokens.surface)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = tokens.surface,
+                        titleContentColor = tokens.textPrimary,
+                        actionIconContentColor = tokens.textSecondary
+                    )
                 )
             }
         },
         bottomBar = {
             if (currentDestination !is AppDestination.LessonDetail && currentDestination !is AppDestination.Quiz) {
                 val navColors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = if (tokens.isDark) tokens.sagePrimary else Color(0xFF000000),
-                    selectedTextColor = if (tokens.isDark) tokens.sagePrimary else Color(0xFF000000),
-                    unselectedIconColor = if (tokens.isDark) tokens.textMuted else Color(0xFF222222),
-                    unselectedTextColor = if (tokens.isDark) tokens.textMuted else Color(0xFF222222),
-                    indicatorColor = if (tokens.isDark) tokens.surfaceSecondary else tokens.sageSoft.copy(alpha = 0.6f)
+                    selectedIconColor = tokens.primary,
+                    selectedTextColor = tokens.primary,
+                    unselectedIconColor = tokens.textSecondary,
+                    unselectedTextColor = tokens.textSecondary,
+                    indicatorColor = tokens.subtleAccentBg
                 )
 
                 Surface(
@@ -250,8 +254,8 @@ fun MainApp(
                         onBack = { currentDestination = AppDestination.Learn },
                         onToggleComplete = { repository.toggleLessonCompleted(dest.lessonId) },
                         onToggleBookmark = { repository.toggleLessonBookmarked(dest.lessonId) },
-                        onNavigateToPlaygroundWithCode = {
-                            playgroundInitialCode = it
+                        onNavigateToPlaygroundWithCode = { code ->
+                            playgroundInitialCode = code
                             currentDestination = AppDestination.Practice
                         },
                         onNavigateToNextLesson = { nextId ->
@@ -263,95 +267,115 @@ fun MainApp(
                     QuizScreen(
                         quizType = dest.quizType,
                         currentLanguage = currentLanguage,
-                        onFinish = { xpEarned ->
-                            repository.addXp(xpEarned)
+                        onFinish = { xpGained ->
+                            repository.addXp(xpGained)
                             currentDestination = AppDestination.Practice
                         },
                         onBack = { currentDestination = AppDestination.Practice }
                     )
                 }
             }
-        }
-    }
 
-    // Language Selector Dialog
-    if (showLanguageDialog) {
-        LanguageSelectorDialog(
-            currentLanguage = currentLanguage,
-            onLanguageSelected = { repository.setLanguage(it) },
-            onDismissRequest = { showLanguageDialog = false }
-        )
-    }
-
-    // Global Search Dialog
-    if (showSearchDialog) {
-        var query by remember { mutableStateOf("") }
-        val results = remember(query) {
-            if (query.length < 2) emptyList()
-            else CurriculumData.searchLessons(query)
-        }
-
-        AlertDialog(
-            onDismissRequest = { showSearchDialog = false },
-            containerColor = tokens.surface,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
-            title = {
-                Text(
-                    text = "Quick Search",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = tokens.textPrimary
+            // Global Language Selector Dialog
+            if (showLanguageDialog) {
+                LanguageSelectorDialog(
+                    currentLanguage = currentLanguage,
+                    onLanguageSelected = { repository.setLanguage(it) },
+                    onDismissRequest = { showLanguageDialog = false }
                 )
-            },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        placeholder = { Text("e.g. StatelessWidget, Bloc, Null Safety...", style = MaterialTheme.typography.bodyMedium, color = tokens.textMuted) },
-                        singleLine = true,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = tokens.primary,
-                            unfocusedBorderColor = tokens.border,
-                            focusedContainerColor = tokens.surfaceSecondary,
-                            unfocusedContainerColor = tokens.surfaceSecondary
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("global_search_input")
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-                    if (results.isEmpty() && query.length >= 2) {
-                        Text("No matching lessons found", style = MaterialTheme.typography.bodySmall, color = tokens.textMuted)
-                    } else {
-                        results.take(5).forEach { lesson ->
-                            Row(
+            }
+
+            // Quick Search Dialog
+            if (showSearchDialog) {
+                var query by remember { mutableStateOf("") }
+                val searchResults = remember(query) {
+                    if (query.isBlank()) emptyList()
+                    else CurriculumData.allLessons.filter {
+                        it.title.contains(query, ignoreCase = true) ||
+                        it.description.contains(query, ignoreCase = true) ||
+                        it.detailedContent.contains(query, ignoreCase = true)
+                    }.take(6)
+                }
+
+                AlertDialog(
+                    onDismissRequest = { showSearchDialog = false },
+                    shape = RoundedCornerShape(16.dp),
+                    containerColor = tokens.surface,
+                    modifier = Modifier.border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                    title = {
+                        Text(
+                            text = "Search Curriculum",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = tokens.textPrimary
+                        )
+                    },
+                    text = {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = query,
+                                onValueChange = { query = it },
+                                placeholder = { Text("e.g. Riverpod, Widgets, Async...", color = tokens.textMuted) },
+                                singleLine = true,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable {
-                                        showSearchDialog = false
-                                        currentDestination = AppDestination.LessonDetail(lesson.id)
+                                    .testTag("search_dialog_input"),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = tokens.primary,
+                                    unfocusedBorderColor = tokens.border,
+                                    focusedTextColor = tokens.textPrimary,
+                                    unfocusedTextColor = tokens.textPrimary,
+                                    focusedContainerColor = tokens.surfaceSecondary,
+                                    unfocusedContainerColor = tokens.surfaceSecondary
+                                ),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            if (searchResults.isEmpty() && query.isNotBlank()) {
+                                Text(
+                                    text = "No matching lessons found",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = tokens.textMuted,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                            searchResults.forEach { lesson ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            showSearchDialog = false
+                                            currentDestination = AppDestination.LessonDetail(lesson.id)
+                                        }
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.School, contentDescription = null, tint = tokens.primary, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = lesson.title,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = tokens.textPrimary
+                                        )
+                                        Text(
+                                            text = lesson.courseTrack.name,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = tokens.textSecondary
+                                        )
                                     }
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("•", color = tokens.primary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
-                                Column {
-                                    Text(lesson.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = tokens.textPrimary)
-                                    Text(lesson.moduleTitle, style = MaterialTheme.typography.bodySmall, color = tokens.textMuted)
                                 }
                             }
                         }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showSearchDialog = false }) {
+                            Text("Done", color = tokens.primary)
+                        }
                     }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showSearchDialog = false }) {
-                    Text("Close", color = tokens.primary)
-                }
+                )
             }
-        )
+        }
     }
 }

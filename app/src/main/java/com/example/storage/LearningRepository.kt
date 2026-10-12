@@ -19,14 +19,28 @@ class LearningRepository private constructor(context: Context) {
     val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
 
     private val _themeMode = MutableStateFlow(
-        AppThemeMode.fromString(prefs.getString("pref_theme_mode", "DARK") ?: "DARK")
+        AppThemeMode.fromString(
+            if (!prefs.getBoolean("pref_light_theme_refactored_v1", false)) "LIGHT"
+            else prefs.getString("pref_theme_mode", "LIGHT") ?: "LIGHT"
+        )
     )
     val themeMode: StateFlow<AppThemeMode> = _themeMode.asStateFlow()
 
     private val _isDarkMode = MutableStateFlow(
-        prefs.getBoolean("pref_dark_mode", true)
+        if (!prefs.getBoolean("pref_light_theme_refactored_v1", false)) false
+        else prefs.getBoolean("pref_dark_mode", false)
     )
     val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
+
+    init {
+        if (!prefs.getBoolean("pref_light_theme_refactored_v1", false)) {
+            prefs.edit()
+                .putString("pref_theme_mode", "LIGHT")
+                .putBoolean("pref_dark_mode", false)
+                .putBoolean("pref_light_theme_refactored_v1", true)
+                .apply()
+        }
+    }
 
     private val _userProfile = MutableStateFlow(
         UserProfile(

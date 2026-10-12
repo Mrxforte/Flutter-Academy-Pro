@@ -47,10 +47,10 @@ fun ProfileScreen(
             .fillMaxSize()
             .background(tokens.background)
             .testTag("profile_screen_lazy_column"),
-        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        // Profile Header: Minimalist and refined
+        // Profile Header
         item {
             Card(
                 modifier = Modifier
@@ -66,9 +66,9 @@ fun ProfileScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(70.dp)
+                            .size(72.dp)
                             .clip(CircleShape)
-                            .background(tokens.surfaceSecondary)
+                            .background(tokens.subtleAccentBg)
                             .border(1.dp, tokens.border, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
@@ -76,7 +76,7 @@ fun ProfileScreen(
                             text = userProfile.name.take(1).uppercase(),
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = if (tokens.isDark) tokens.sagePrimary else tokens.textPrimary
+                            color = tokens.primary
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -89,7 +89,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = if (tokens.isDark) tokens.surfaceSecondary else tokens.surfaceSecondary
+                        color = tokens.surfaceSecondary
                     ) {
                         Text(
                             text = userProfile.skillLevel.uppercase(),
@@ -128,9 +128,9 @@ fun ProfileScreen(
                             progress = { progressFraction },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(5.dp)
+                                .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp)),
-                            color = if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary,
+                            color = tokens.primary,
                             trackColor = tokens.surfaceSecondary
                         )
                     }
@@ -138,7 +138,7 @@ fun ProfileScreen(
             }
         }
 
-        // Stats Summary: Creamy white surfaces
+        // Stats Summary Cards
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -186,7 +186,7 @@ fun ProfileScreen(
             }
         }
 
-        // Appearance Mode Switcher (Section 3: Light, Dark, System default)
+        // Appearance Mode Switcher
         item {
             Card(
                 modifier = Modifier
@@ -205,13 +205,12 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Sage Green + Warm Neutral palette across all screens.",
+                        text = "Clean light theme with #FFFFFF cards and crisp typography.",
                         style = MaterialTheme.typography.bodySmall,
                         color = tokens.textSecondary
                     )
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 3-Option Segmented Control: Dark, Light, System
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -221,13 +220,8 @@ fun ProfileScreen(
                     ) {
                         AppThemeMode.entries.forEach { mode ->
                             val isSelected = currentThemeMode == mode
-                            val bg = if (isSelected) {
-                                if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary
-                            } else tokens.surfaceSecondary
-
-                            val textColor = if (isSelected) {
-                                if (tokens.isDark) tokens.surface else tokens.buttonPrimaryText
-                            } else tokens.textSecondary
+                            val bg = if (isSelected) tokens.buttonPrimary else tokens.surfaceSecondary
+                            val textColor = if (isSelected) tokens.buttonPrimaryText else tokens.textSecondary
 
                             Box(
                                 modifier = Modifier
@@ -257,110 +251,55 @@ fun ProfileScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
+                    .border(1.dp, tokens.border, RoundedCornerShape(16.dp))
+                    .clickable { onOpenLanguageDialog() }
+                    .testTag("profile_language_selector"),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = tokens.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Text(
-                        text = "Language & Region",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = tokens.textPrimary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Curriculum available in English, Uzbek, and Russian.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = tokens.textSecondary
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onOpenLanguageDialog() },
-                        shape = RoundedCornerShape(10.dp),
-                        color = tokens.surfaceSecondary
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                Row(
+                    modifier = Modifier.padding(18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(tokens.subtleAccentBg),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = currentLanguage.flag, fontSize = 20.sp)
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
-                                    text = currentLanguage.displayName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = tokens.textPrimary
-                                )
-                            }
+                            Text(text = currentLanguage.flag, fontSize = 20.sp)
+                        }
+                        Spacer(modifier = Modifier.width(14.dp))
+                        Column {
                             Text(
-                                text = "Change",
-                                style = MaterialTheme.typography.labelMedium,
+                                text = "Curriculum Language",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = tokens.textPrimary
+                            )
+                            Text(
+                                text = currentLanguage.displayName,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = tokens.textSecondary
                             )
                         }
                     }
+
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "Select language",
+                        tint = tokens.textSecondary,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
 
-        // Achievements Showcase
-        item {
-            Column {
-                Text(
-                    text = "Achievement Badges",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = tokens.textPrimary
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    items(AchievementData.badges) { badge ->
-                        val isUnlocked = badge.isUnlocked || userProfile.earnedBadgeIds.contains(badge.id) || userProfile.xp >= badge.xpReward
-                        Card(
-                            modifier = Modifier
-                                .width(150.dp)
-                                .border(1.dp, tokens.border, RoundedCornerShape(14.dp)),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isUnlocked) tokens.surface else tokens.surfaceSecondary
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(14.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(text = badge.iconEmoji, fontSize = 26.sp)
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = badge.title,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isUnlocked) tokens.textPrimary else tokens.textMuted
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = badge.description,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = tokens.textMuted,
-                                    maxLines = 2
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Bookmarked Lessons
+        // Bookmarks Section
         if (bookmarkedLessons.isNotEmpty()) {
             item {
                 Column {
@@ -385,28 +324,110 @@ fun ProfileScreen(
                             ) {
                                 Row(
                                     modifier = Modifier.padding(14.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    Icon(
+                                        Icons.Default.Bookmark,
+                                        contentDescription = null,
+                                        tint = tokens.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = lesson.title,
-                                            style = MaterialTheme.typography.titleSmall,
+                                            style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.SemiBold,
                                             color = tokens.textPrimary
                                         )
                                         Text(
-                                            text = lesson.moduleTitle,
-                                            style = MaterialTheme.typography.bodySmall,
+                                            text = lesson.courseTrack.name,
+                                            style = MaterialTheme.typography.labelSmall,
                                             color = tokens.textSecondary
                                         )
                                     }
                                     Icon(
-                                        Icons.Default.Bookmark,
+                                        Icons.Default.ChevronRight,
                                         contentDescription = null,
-                                        tint = if (tokens.isDark) tokens.sagePrimary else tokens.textPrimary,
+                                        tint = tokens.textSecondary,
                                         modifier = Modifier.size(18.dp)
                                     )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Badges & Achievements Section
+        item {
+            Column {
+                Text(
+                    text = "Achievements & Badges",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = tokens.textPrimary
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AchievementData.badges.forEach { badge ->
+                        val isUnlocked = userProfile.earnedBadgeIds.contains(badge.id) || badge.isUnlocked
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, tokens.border, RoundedCornerShape(12.dp)),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (isUnlocked) tokens.warning.copy(alpha = 0.12f)
+                                            else tokens.surfaceSecondary
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = badge.iconEmoji,
+                                        fontSize = 18.sp
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = badge.title,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isUnlocked) tokens.textPrimary else tokens.textSecondary
+                                    )
+                                    Text(
+                                        text = badge.description,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = tokens.textSecondary
+                                    )
+                                }
+                                if (isUnlocked) {
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = tokens.success.copy(alpha = 0.12f)
+                                    ) {
+                                        Text(
+                                            text = "+${badge.xpReward} XP",
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = tokens.success
+                                        )
+                                    }
                                 }
                             }
                         }

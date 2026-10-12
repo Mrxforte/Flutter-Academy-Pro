@@ -55,25 +55,25 @@ private val DarkM3ColorScheme = darkColorScheme(
 )
 
 private val LightM3ColorScheme = lightColorScheme(
-    primary = LightButtonPrimary,         // Black CTA as primary in light mode
-    onPrimary = LightButtonPrimaryText,   // White text on primary CTA
-    primaryContainer = SageSoft,          // Soft sage container
-    onPrimaryContainer = LightTextPrimary,
-    secondary = SageDeep,
-    onSecondary = LightTextPrimary,
-    secondaryContainer = PureWhiteSecondary,
-    onSecondaryContainer = LightTextPrimary,
-    tertiary = LightWarning,
+    primary = PaletteAccentPrimary,             // #5B5FEF
+    onPrimary = Color.White,
+    primaryContainer = PaletteAccentSubtleBg,   // #EEF0FF
+    onPrimaryContainer = PaletteAccentPrimary,
+    secondary = PaletteAccentSecondary,         // #7C83FF
+    onSecondary = Color.White,
+    secondaryContainer = PaletteSecondarySurface,// #F0F3F9
+    onSecondaryContainer = PaletteTextPrimary,
+    tertiary = PaletteWarning,                  // #EAA12B
     onTertiary = Color.White,
-    background = PureWhiteBg,             // Clean white background
-    onBackground = LightTextPrimary,
-    surface = PureWhiteSurface,           // Pure white cards & surfaces
-    onSurface = LightTextPrimary,
-    surfaceVariant = PureWhiteSecondary,  // Clean secondary surfaces
-    onSurfaceVariant = LightTextSecondary,
-    outline = LightBorder,
-    outlineVariant = Color(0xFFE5E7EB),
-    error = LightError,
+    background = PaletteMainBg,                 // #F7F8FC
+    onBackground = PaletteTextPrimary,          // #172033
+    surface = PaletteCardBg,                    // #FFFFFF
+    onSurface = PaletteTextPrimary,             // #172033
+    surfaceVariant = PaletteSecondarySurface,   // #F0F3F9
+    onSurfaceVariant = PaletteTextSecondary,    // #667085
+    outline = PaletteBorder,                    // #E5E9F2
+    outlineVariant = Color(0xFFEDF2F7),
+    error = PaletteError,                       // #E5484D
     onError = Color.White
 )
 

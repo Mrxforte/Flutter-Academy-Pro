@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,27 +54,17 @@ fun LearnScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 14.dp)
+                .padding(horizontal = 20.dp, vertical = 14.dp)
                 .background(tokens.surfaceSecondary, RoundedCornerShape(12.dp))
                 .border(1.dp, tokens.border, RoundedCornerShape(12.dp))
                 .padding(4.dp)
         ) {
             val isDart = selectedTrack == CourseTrack.DART
-            val dartBg = if (isDart) {
-                if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary
-            } else tokens.surfaceSecondary
+            val dartBg = if (isDart) tokens.buttonPrimary else tokens.surfaceSecondary
+            val dartTextColor = if (isDart) tokens.buttonPrimaryText else tokens.textSecondary
 
-            val dartTextColor = if (isDart) {
-                if (tokens.isDark) tokens.surface else tokens.buttonPrimaryText
-            } else tokens.textSecondary
-
-            val flutterBg = if (!isDart) {
-                if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary
-            } else tokens.surfaceSecondary
-
-            val flutterTextColor = if (!isDart) {
-                if (tokens.isDark) tokens.surface else tokens.buttonPrimaryText
-            } else tokens.textSecondary
+            val flutterBg = if (!isDart) tokens.buttonPrimary else tokens.surfaceSecondary
+            val flutterTextColor = if (!isDart) tokens.buttonPrimaryText else tokens.textSecondary
 
             Box(
                 modifier = Modifier
@@ -83,14 +75,14 @@ fun LearnScreen(
                         selectedTrack = CourseTrack.DART
                         expandedModuleId = "dart_mod_1"
                     }
-                    .padding(vertical = 9.dp)
+                    .padding(vertical = 10.dp)
                     .testTag("tab_dart"),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Dart Mastery",
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (isDart) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (isDart) FontWeight.Bold else FontWeight.Medium,
                     color = dartTextColor
                 )
             }
@@ -104,249 +96,252 @@ fun LearnScreen(
                         selectedTrack = CourseTrack.FLUTTER
                         expandedModuleId = "fl_mod_1"
                     }
-                    .padding(vertical = 9.dp)
+                    .padding(vertical = 10.dp)
                     .testTag("tab_flutter"),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Flutter Professional",
+                    text = "Flutter Framework",
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (!isDart) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (!isDart) FontWeight.Bold else FontWeight.Medium,
                     color = flutterTextColor
                 )
             }
         }
 
-        // Search Bar & Filter Chips
-        Column(modifier = Modifier.padding(horizontal = 22.dp)) {
+        // Search & Filter Row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
+                placeholder = { Text("Search lessons, topics...", style = MaterialTheme.typography.bodySmall, color = tokens.textMuted) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = tokens.textSecondary, modifier = Modifier.size(18.dp)) },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("curriculum_search_input"),
-                placeholder = {
-                    Text(
-                        text = "Search lessons, widgets, syntax...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = tokens.textMuted
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = tokens.textMuted,
-                        modifier = Modifier.size(18.dp)
-                    )
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear", tint = tokens.textMuted, modifier = Modifier.size(16.dp))
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                    .weight(1f)
+                    .testTag("learn_search_field"),
+                shape = RoundedCornerShape(10.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = tokens.primary,
                     unfocusedBorderColor = tokens.border,
+                    focusedTextColor = tokens.textPrimary,
+                    unfocusedTextColor = tokens.textPrimary,
                     focusedContainerColor = tokens.surface,
                     unfocusedContainerColor = tokens.surface
-                )
+                ),
+                singleLine = true
             )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Difficulty Chips
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    val isAll = selectedDifficulty == null
-                    FilterChip(
-                        selected = isAll,
-                        onClick = { selectedDifficulty = null },
-                        label = { Text("All", style = MaterialTheme.typography.labelSmall) },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary,
-                            selectedLabelColor = if (tokens.isDark) tokens.surface else tokens.buttonPrimaryText,
-                            containerColor = tokens.surfaceSecondary,
-                            labelColor = tokens.textSecondary
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = isAll,
-                            borderColor = if (isAll) tokens.primary else tokens.border
-                        )
-                    )
-                }
-                items(Difficulty.entries.toTypedArray()) { diff ->
-                    val isSelected = selectedDifficulty == diff
-                    FilterChip(
-                        selected = isSelected,
-                        onClick = { selectedDifficulty = if (isSelected) null else diff },
-                        label = { Text(diff.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall) },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary,
-                            selectedLabelColor = if (tokens.isDark) tokens.surface else tokens.buttonPrimaryText,
-                            containerColor = tokens.surfaceSecondary,
-                            labelColor = tokens.textSecondary
-                        ),
-                        border = FilterChipDefaults.filterChipBorder(
-                            enabled = true,
-                            selected = isSelected,
-                            borderColor = if (isSelected) tokens.primary else tokens.border
-                        )
-                    )
-                }
-            }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        // Difficulty Chips Row
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item {
+                val isAll = selectedDifficulty == null
+                FilterChip(
+                    selected = isAll,
+                    onClick = { selectedDifficulty = null },
+                    label = { Text("All Levels", style = MaterialTheme.typography.labelSmall) },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = tokens.primary,
+                        selectedLabelColor = Color.White,
+                        containerColor = tokens.surface,
+                        labelColor = tokens.textSecondary
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isAll,
+                        borderColor = if (isAll) tokens.primary else tokens.border
+                    )
+                )
+            }
+            items(Difficulty.entries.toTypedArray()) { diff ->
+                val isSelected = selectedDifficulty == diff
+                FilterChip(
+                    selected = isSelected,
+                    onClick = { selectedDifficulty = if (isSelected) null else diff },
+                    label = { Text(diff.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelSmall) },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = tokens.primary,
+                        selectedLabelColor = Color.White,
+                        containerColor = tokens.surface,
+                        labelColor = tokens.textSecondary
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = isSelected,
+                        borderColor = if (isSelected) tokens.primary else tokens.border
+                    )
+                )
+            }
+        }
 
         // Modules & Lessons List
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 22.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(bottom = 28.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            contentPadding = PaddingValues(bottom = 24.dp)
         ) {
             items(modules) { module ->
-                val filteredLessons = module.lessons.filter { lesson ->
-                    val matchesDiff = selectedDifficulty == null || lesson.difficulty == selectedDifficulty
-                    val matchesQuery = searchQuery.isEmpty() ||
-                        lesson.title.contains(searchQuery, ignoreCase = true) ||
-                        lesson.description.contains(searchQuery, ignoreCase = true)
-                    matchesDiff && matchesQuery
+                val isExpanded = expandedModuleId == module.id
+                val lessons = remember(module, searchQuery, selectedDifficulty) {
+                    module.lessons.filter { lesson ->
+                        val matchesQuery = searchQuery.isBlank() ||
+                                lesson.title.contains(searchQuery, ignoreCase = true) ||
+                                lesson.description.contains(searchQuery, ignoreCase = true) ||
+                                lesson.detailedContent.contains(searchQuery, ignoreCase = true)
+                        val matchesDiff = selectedDifficulty == null || lesson.difficulty == selectedDifficulty
+                        matchesQuery && matchesDiff
+                    }
                 }
 
-                if (searchQuery.isNotEmpty() && filteredLessons.isEmpty()) {
-                    return@items
-                }
-
-                val completedCount = module.lessons.count { completedLessonIds.contains(it.id) }
-                val isExpanded = expandedModuleId == module.id || searchQuery.isNotEmpty()
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, tokens.border, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = tokens.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Column {
-                        // Module Header
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    expandedModuleId = if (isExpanded) null else module.id
-                                }
-                                .padding(18.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = module.title,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = tokens.textPrimary
-                                )
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Text(
-                                    text = module.description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = tokens.textSecondary,
-                                    maxLines = 2
-                                )
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    LinearProgressIndicator(
-                                        progress = {
-                                            if (module.lessons.isNotEmpty()) completedCount.toFloat() / module.lessons.size else 0f
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(4.dp)
-                                            .clip(RoundedCornerShape(2.dp)),
-                                        color = if (tokens.isDark) tokens.sagePrimary else tokens.buttonPrimary,
-                                        trackColor = tokens.surfaceSecondary
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(
-                                        text = "$completedCount/${module.lessons.size} done",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = tokens.textSecondary
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Icon(
-                                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = if (isExpanded) "Collapse" else "Expand",
-                                tint = tokens.textSecondary
-                            )
-                        }
-
-                        // Expanded Lessons list
-                        AnimatedVisibility(visible = isExpanded) {
-                            Column(
+                if (lessons.isNotEmpty() || searchQuery.isBlank()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, tokens.border, RoundedCornerShape(14.dp)),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = tokens.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column {
+                            // Module Header
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(tokens.surfaceSecondary)
+                                    .clickable {
+                                        expandedModuleId = if (isExpanded) null else module.id
+                                    }
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                HorizontalDivider(color = tokens.border)
-
-                                filteredLessons.forEach { lesson ->
-                                    val isDone = completedLessonIds.contains(lesson.id)
-                                    Row(
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
                                         modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { onNavigateToLesson(lesson.id) }
-                                            .padding(horizontal = 18.dp, vertical = 12.dp)
-                                            .testTag("lesson_item_${lesson.id}"),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                            .size(36.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(tokens.subtleAccentBg),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.weight(1f)
+                                        Icon(
+                                            imageVector = if (selectedTrack == CourseTrack.DART) Icons.Default.Terminal else Icons.Default.Layers,
+                                            contentDescription = null,
+                                            tint = tokens.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = module.title,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = tokens.textPrimary
+                                        )
+                                        Text(
+                                            text = "${lessons.size} lessons • ${module.description}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = tokens.textSecondary,
+                                            maxLines = 1
+                                        )
+                                    }
+                                }
+
+                                Icon(
+                                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = "Toggle Module",
+                                    tint = tokens.textSecondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            // Expanded Lessons List
+                            AnimatedVisibility(visible = isExpanded) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp)
+                                        .padding(bottom = 12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    HorizontalDivider(color = tokens.border, thickness = 1.dp)
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    lessons.forEach { lesson ->
+                                        val isCompleted = completedLessonIds.contains(lesson.id)
+
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .border(1.dp, tokens.border, RoundedCornerShape(10.dp))
+                                                .clickable { onNavigateToLesson(lesson.id) }
+                                                .testTag("lesson_card_${lesson.id}"),
+                                            shape = RoundedCornerShape(10.dp),
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = if (isCompleted) tokens.surfaceSecondary else tokens.surface
+                                            ),
+                                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                                         ) {
-                                            Icon(
-                                                imageVector = if (isDone) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
-                                                contentDescription = if (isDone) "Done" else "Pending",
-                                                tint = if (isDone) tokens.success else tokens.border,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(12.dp))
-                                            Column {
-                                                Text(
-                                                    text = lesson.title,
-                                                    style = MaterialTheme.typography.titleSmall,
-                                                    fontWeight = FontWeight.Medium,
-                                                    color = tokens.textPrimary
-                                                )
-                                                Text(
-                                                    text = "${lesson.durationMinutes} min read",
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = tokens.textMuted
-                                                )
+                                            Row(
+                                                modifier = Modifier.padding(12.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(26.dp)
+                                                        .clip(CircleShape)
+                                                        .background(
+                                                            if (isCompleted) tokens.success.copy(alpha = 0.15f)
+                                                            else tokens.surfaceSecondary
+                                                        ),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        imageVector = if (isCompleted) Icons.Default.Check else Icons.Default.PlayArrow,
+                                                        contentDescription = null,
+                                                        tint = if (isCompleted) tokens.success else tokens.textSecondary,
+                                                        modifier = Modifier.size(14.dp)
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.width(10.dp))
+
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = lesson.title,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = tokens.textPrimary
+                                                    )
+                                                    Text(
+                                                        text = "${lesson.durationMinutes} min • ${lesson.description}",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = tokens.textSecondary,
+                                                        maxLines = 1
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                DifficultyBadge(difficulty = lesson.difficulty)
                                             }
                                         }
-
-                                        DifficultyBadge(difficulty = lesson.difficulty)
                                     }
-                                    HorizontalDivider(
-                                        color = tokens.border.copy(alpha = 0.5f),
-                                        modifier = Modifier.padding(horizontal = 18.dp)
-                                    )
                                 }
                             }
                         }
