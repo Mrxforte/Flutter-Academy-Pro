@@ -69,18 +69,18 @@ fun MainApp(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(28.dp)
-                                    .background(tokens.subtleAccentBg, RoundedCornerShape(8.dp)),
+                                    .size(32.dp)
+                                    .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = "⚡", fontSize = 15.sp)
+                                Text(text = "⚡", fontSize = 16.sp)
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = "Flutter Academy",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = tokens.textPrimary
+                                color = tokens.appBarContentColor
                             )
                         }
                     },
@@ -88,8 +88,7 @@ fun MainApp(
                         // Compact Streak Pill
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = tokens.warning.copy(alpha = 0.12f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, tokens.warning.copy(alpha = 0.25f)),
+                            color = Color.White.copy(alpha = 0.2f),
                             modifier = Modifier.padding(end = 6.dp)
                         ) {
                             Row(
@@ -99,8 +98,8 @@ fun MainApp(
                                 Text(
                                     text = "🔥 ${userProfile.streakDays}d",
                                     fontSize = 11.sp,
-                                    color = tokens.warning,
-                                    fontWeight = FontWeight.SemiBold
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
@@ -110,7 +109,7 @@ fun MainApp(
                             onClick = { showSearchDialog = true },
                             modifier = Modifier.testTag("app_search_button")
                         ) {
-                            Icon(Icons.Default.Search, contentDescription = "Search", tint = tokens.textSecondary, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Search, contentDescription = "Search", tint = tokens.appBarContentColor, modifier = Modifier.size(20.dp))
                         }
 
                         // Language Toggle
@@ -118,13 +117,20 @@ fun MainApp(
                             onClick = { showLanguageDialog = true },
                             modifier = Modifier.testTag("app_language_button")
                         ) {
-                            Text(text = currentLanguage.flag, fontSize = 18.sp)
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .background(Color.White.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = currentLanguage.flag, fontSize = 16.sp)
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = tokens.surface,
-                        titleContentColor = tokens.textPrimary,
-                        actionIconContentColor = tokens.textSecondary
+                        containerColor = tokens.appBarBackground,
+                        titleContentColor = tokens.appBarContentColor,
+                        actionIconContentColor = tokens.appBarContentColor
                     )
                 )
             }

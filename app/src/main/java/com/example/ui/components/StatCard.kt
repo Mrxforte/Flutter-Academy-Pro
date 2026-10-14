@@ -56,6 +56,7 @@ fun StatCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
                     color = tokens.textSecondary,
                     maxLines = 1
                 )

@@ -65,12 +65,12 @@ fun LessonDetailScreen(
                         maxLines = 1,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = tokens.textPrimary
+                        color = tokens.appBarContentColor
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("lesson_back_button")) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = tokens.textPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = tokens.appBarContentColor)
                     }
                 },
                 actions = {
@@ -78,15 +78,15 @@ fun LessonDetailScreen(
                         Icon(
                             imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                             contentDescription = "Bookmark",
-                            tint = if (isBookmarked) tokens.primary else tokens.textSecondary
+                            tint = if (isBookmarked) Color(0xFFFFD166) else tokens.appBarContentColor
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = tokens.surface,
-                    titleContentColor = tokens.textPrimary,
-                    navigationIconContentColor = tokens.textPrimary,
-                    actionIconContentColor = tokens.textSecondary
+                    containerColor = tokens.appBarBackground,
+                    titleContentColor = tokens.appBarContentColor,
+                    navigationIconContentColor = tokens.appBarContentColor,
+                    actionIconContentColor = tokens.appBarContentColor
                 )
             )
         },

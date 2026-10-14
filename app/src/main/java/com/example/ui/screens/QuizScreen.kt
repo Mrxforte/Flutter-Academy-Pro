@@ -70,18 +70,18 @@ fun QuizScreen(
                         text = if (!isQuizFinished) "Question ${currentIndex + 1} of ${questions.size}" else "Assessment Summary",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = tokens.textPrimary
+                        color = tokens.appBarContentColor
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("quiz_back_button")) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = tokens.textPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = tokens.appBarContentColor)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = tokens.surface,
-                    titleContentColor = tokens.textPrimary,
-                    navigationIconContentColor = tokens.textPrimary
+                    containerColor = tokens.appBarBackground,
+                    titleContentColor = tokens.appBarContentColor,
+                    navigationIconContentColor = tokens.appBarContentColor
                 )
             )
         }

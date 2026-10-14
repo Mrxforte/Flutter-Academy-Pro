@@ -29,8 +29,8 @@ val PaletteSecondarySurface = Color(0xFFF0F3F9)
 val PaletteElevated = Color(0xFFFFFFFF)
 
 val PaletteTextPrimary = Color(0xFF172033)
-val PaletteTextSecondary = Color(0xFF667085)
-val PaletteTextMuted = Color(0xFF98A2B3)
+val PaletteTextSecondary = Color(0xFF344054) // High contrast, easily visible dark slate (#344054)
+val PaletteTextMuted = Color(0xFF667085)     // Clear, legible secondary slate (#667085)
 val PaletteBorder = Color(0xFFE5E9F2)
 
 val PaletteAccentPrimary = Color(0xFF5B5FEF)
@@ -48,7 +48,7 @@ val LightCodeText = Color(0xFF1E293B)
 val LightCodeKeyword = Color(0xFF4F46E5)     // Indigo keyword
 val LightCodeType = Color(0xFF0284C7)        // Sky/Cyan type
 val LightCodeString = Color(0xFF0D9488)      // Teal string
-val LightCodeComment = Color(0xFF94A3B8)     // Slate comment
+val LightCodeComment = Color(0xFF64748B)     // Slate comment
 val LightCodeNumber = Color(0xFFD97706)      // Amber number
 val LightCodeFunction = Color(0xFF2563EB)    // Blue function
 
@@ -94,6 +94,8 @@ data class AppDesignTokens(
     val primary: Color,              // Primary accent #5B5FEF
     val secondary: Color,            // Secondary accent #7C83FF
     val subtleAccentBg: Color,       // #EEF0FF
+    val appBarBackground: Color,     // Distinct App Bar background
+    val appBarContentColor: Color,   // App Bar title & icon color
     val sagePrimary: Color,          // Alias for backward compatibility
     val sageSoft: Color,             // Alias for subtle accent
     val sageDeep: Color,             // Alias for secondary accent
@@ -124,6 +126,8 @@ val DarkDesignTokens = AppDesignTokens(
     primary = DarkPrimaryAccent,
     secondary = DarkSecondaryAccent,
     subtleAccentBg = Color(0xFF1E1B4B),
+    appBarBackground = DarkPrimarySurface,
+    appBarContentColor = Color.White,
     sagePrimary = DarkPrimaryAccent,
     sageSoft = Color(0xFF1E293B),
     sageDeep = DarkSecondaryAccent,
@@ -148,12 +152,14 @@ val LightDesignTokens = AppDesignTokens(
     surfaceSecondary = PaletteSecondarySurface,// #F0F3F9 - Secondary light surface
     surfaceElevated = PaletteElevated,       // #FFFFFF - Elevated panels and dialogs
     textPrimary = PaletteTextPrimary,        // #172033 - Deep dark readable text
-    textSecondary = PaletteTextSecondary,    // #667085 - Secondary descriptive text
-    textMuted = PaletteTextMuted,            // #98A2B3 - Muted hints
+    textSecondary = PaletteTextSecondary,    // #344054 - High-contrast readable secondary text
+    textMuted = PaletteTextMuted,            // #667085 - Visible secondary hint text
     border = PaletteBorder,                  // #E5E9F2 - Soft subtle border
     primary = PaletteAccentPrimary,          // #5B5FEF - Modern vibrant primary accent
     secondary = PaletteAccentSecondary,      // #7C83FF - Secondary accent
     subtleAccentBg = PaletteAccentSubtleBg,  // #EEF0FF - Light tinted accent surface
+    appBarBackground = PaletteAccentPrimary, // #5B5FEF - Beautiful branded vibrant app bar
+    appBarContentColor = Color.White,        // Crisp white title and icons on app bar
     sagePrimary = PaletteAccentPrimary,      // Compatibility
     sageSoft = PaletteAccentSubtleBg,        // Compatibility
     sageDeep = PaletteAccentSecondary,       // Compatibility

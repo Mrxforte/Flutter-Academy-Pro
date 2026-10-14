@@ -80,7 +80,8 @@ fun HomeScreen(
                 Column {
                     Text(
                         text = "Good day, ${userProfile.name}",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = tokens.textSecondary,
                         letterSpacing = 0.2.sp
                     )
